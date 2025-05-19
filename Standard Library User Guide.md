@@ -51,7 +51,7 @@ fn example_use_as() -> Result<(), IoError> {
 }
 
 // Importing all public items with use (generally not recommended)
-// use std::collections::*; // Now Vec, HashMap can be used directly
+ use std::collections::*; // Now Vec, HashMap can be used directly
 
 fn main() -> void {
     let v = example_use_vec();
@@ -61,15 +61,13 @@ fn main() -> void {
     // ...
 }
 use statements are usually placed at the beginning of the file or module.
-
+```
 2. Core Types and Traits (std::core)
 The std::core module (or the core of the language) contains fundamental structures and traits like Option, Result, String, Copy, Clone, Debug, Display. These items are used in almost every D++ program.
 
 Using Option&lt;T>
 Represents a value that may or may not be present. Used with the match expression.
-
-Kod snippet'i
-
+```
 use std::core::Option::{Some, None}; // Or just use std::core::Option;
 
 fn find_first_even(numbers: &[int]) -> Option<int> {
@@ -101,10 +99,9 @@ fn main() -> void {
     }
 }
 Using Result&lt;T, E>
+```
 Represents an operation that can either succeed (Ok) or fail (Err). Used for error propagation and typically handled with match.
-
-Kod snippet'i
-
+```
 use std::core::Result::{Ok, Err};
 use std::io::Error as IoError; // We will use io::Error as the error type
 
@@ -114,8 +111,8 @@ fn read_config(path: &str) -> Result<std::core::String, IoError> {
     // use std::fs; // Assume it's also used in main
 
     let content = std::fs::read_to_string(path)?; // The '?' operator propagates the error
-    // If read_to_string returns Ok(s), s is assigned to the 'content' variable, and the code continues.
-    // If read_to_string returns Err(e), the function immediately returns that Err(e).
+     If read_to_string returns Ok(s), s is assigned to the 'content' variable, and the code continues.
+     If read_to_string returns Err(e), the function immediately returns that Err(e).
 
     // Other operations...
     // For example, process the content and create an error condition
@@ -138,19 +135,18 @@ fn main() -> void {
         Err(error) => {
             println!("Configuration read error: {}", error.description()); // Use the Error trait
             // Different actions can be taken based on the error type:
-            // match error {
-            //     IoError::NotFound => println!("Error: config.txt not found."),
-            //     IoError::PermissionDenied => println!("Error: File permission denied."),
-            //     _ => println!("Other I/O error: {}", error.description()),
-            // }
+             match error {
+                 IoError::NotFound => println!("Error: config.txt not found."),
+                 IoError::PermissionDenied => println!("Error: File permission denied."),
+                 _ => println!("Other I/O error: {}", error.description()),
+             }
         }
     }
 }
+```
 String and &amp;str Difference
 std::core::String is a heap-allocated, growable (mutable) text type. &str is a slice (immutable view) into a String or static text literals (string literals).
-
-Kod snippet'i
-
+```
 use std::core::String;
 
 fn main() -> void {
@@ -174,6 +170,7 @@ fn main() -> void {
     take_slice(s2);  // Pass the &str literal
     take_slice(&s3); // Pass the &str slice of the String
 }
+```
 Using Common Traits (Debug, Display, Clone)
 Traits specify shared behaviors that different types can implement.
 
@@ -182,9 +179,7 @@ Debug: Used in places like println!("{:?}", value). Provides a useful debug form
 Clone: Allows creating a deep copy using the value.clone() method. Used when types that are not Copy need to be explicitly duplicated.
 Copy: A marker trait indicating that assignment (=) or passing a value performs an automatic bitwise copy.
 <!-- end list -->
-
-Kod snippet'i
-
+```
 use std::core::{Debug, Display, Clone};
 
 #[derive(Debug, Clone)] // Can be automatically implemented by the compiler
@@ -213,7 +208,7 @@ impl Display for MyStruct {
 fn main() -> void {
     let original = MyStruct { id: 1, data: String::from("hello") };
 
-    // let copy = original; // ERROR: MyStruct is not Copy, this would be a move
+     let copy = original; // ERROR: MyStruct is not Copy, this would be a move
 
     let clone = original.clone(); // Valid: Explicit cloning
 
@@ -221,23 +216,22 @@ fn main() -> void {
     println!("Clone (Debug): {:?}", clone);
 
     println!("Original (Display): {}", original); // Uses the Display trait
-    // println!("Clone (Display): {}", clone); // Same output
+     println!("Clone (Display): {}", clone); // Same output
 
     // Since String is not Copy, 'original' is still valid because cloning does not move ownership.
     println!("Original is still valid: {}", original.id);
 
     // If original had been moved, this would cause an error
-    // let moved_original = original; // Ownership moved to moved_original
-    // println!("Original (Debug): {:?}", original); // ERROR! original is moved
+     let moved_original = original; // Ownership moved to moved_original
+     println!("Original (Debug): {:?}", original); // ERROR! original is moved
 }
+```
 3. Collections (std::collections)
 Provides various data structures. The most common ones are Vec and HashMap.
 
 Using Vec&lt;T>
 A resizable array.
-
-Kod snippet'i
-
+```
 use std::collections::Vec;
 use std::core::Option::{Some, None}; // For using Option
 
@@ -270,15 +264,14 @@ fn main() -> void {
     }
 
     // Mutable iteration
-    // for number_mut_ref in &mut numbers {
-    //    *number_mut_ref += 1; // Change the value via mutable reference
-    // }
+     for number_mut_ref in &mut numbers {
+        *number_mut_ref += 1; // Change the value via mutable reference
+     }
 }
+```
 Using HashMap&lt;K, V>
 Stores key-value pairs. Keys (K) must implement the Hash and Eq traits.
-
-Kod snippet'i
-
+```
 use std::collections::HashMap;
 use std::core::String; // Need String for keys (String implements Hash and Eq)
 use std::core::Option::{Some, None}; // For using Option
@@ -299,10 +292,10 @@ fn main() -> void {
     }
 
     // Mutable access (returns Option<&mut V>)
-    // if let Some(score_mut_ref) = scores.get_mut(&String::from("Bob")) {
-    //     *score_mut_ref += 5; // Update the score
-    //     println!("Bob's new score: {}", *score_mut_ref);
-    // }
+     if let Some(score_mut_ref) = scores.get_mut(&String::from("Bob")) {
+         *score_mut_ref += 5; // Update the score
+         println!("Bob's new score: {}", *score_mut_ref);
+     }
 
     // Removing elements (returns Option<V>, containing the removed value if it existed)
     let removed_score = scores.remove(&String::from("Charlie"));
@@ -316,11 +309,10 @@ fn main() -> void {
         println!("{}: {}", *name_ref, *score_ref); // Dereference the references
     }
 }
+```
 4. Standard Input/Output (std::io)
 Interacts with the console and other I/O sources.
-
-Kod snippet'i
-
+```
 use std::io::{self, Read, Write}; // io module and Read/Write traits
 use std::core::String; // Need String
 use std::core::Option::{Some, None}; // Functions like read_line might return Option
@@ -332,11 +324,11 @@ fn main() -> Result<(), io::Error> { // main can also return an error!
 
     // Reading from console (hypothetical read_line method)
     let mut input_line = String::new();
-    // let read_result = io::stdin().read_line(&mut input_line); // read_line might return Option<usize> or Result<usize, Error>
-    // match read_result {
-    //     Some(bytes_read) => { println!("Read {} bytes.", bytes_read); },
-    //     None => { println!("End of input."); }, // EOF
-    // }
+     let read_result = io::stdin().read_line(&mut input_line); // read_line might return Option<usize> or Result<usize, Error>
+     match read_result {
+         Some(bytes_read) => { println!("Read {} bytes.", bytes_read); },
+         None => { println!("End of input."); }, // EOF
+     }
 
     // Alternatively, reading raw bytes
     println!("Please enter a few characters:");
@@ -367,11 +359,10 @@ fn main() -> Result<(), io::Error> { // main can also return an error!
 
     Ok(()) // Success return
 }
+```
 5. File System (std::fs)
 Used for working with files and directories.
-
-Kod snippet'i
-
+```
 use std::fs::{self, File}; // fs module and File struct
 use std::io::{self, Read, Write}; // File implements Read/Write
 use std::core::Result::{Ok, Err};
@@ -411,11 +402,10 @@ fn main() -> Result<(), io::Error> { // main can return an error!
 
     Ok(()) // Success return
 }
+```
 6. Math (std::math)
 Contains basic mathematical functions and constants.
-
-Kod snippet'i
-
+```
 use std::math; // Import the math module
 
 fn main() -> void {
@@ -451,23 +441,22 @@ fn main() -> void {
     let max_int = math::max(100, 200); // Calls the generic max function
     println!("max({}, {}) = {}", 100, 200, max_int);
 }
+```
 7. Networking (std::net) - A Brief Look
 Provides basic networking capabilities (TCP, UDP). Typically involves error handling.
-
-Kod snippet'i
-
-// use std::net::{self, TcpListener, TcpStream, SocketAddr, IpAddr, Ipv4Addr}; // Import needed items
-// use std::io::{Read, Write}; // TcpStream implements Read/Write
-// use std::core::Result::{Ok, Err};
-// use std::thread; // May need to spawn new threads for a server
-// use std::time::Duration; // For sleep
+```
+ use std::net::{self, TcpListener, TcpStream, SocketAddr, IpAddr, Ipv4Addr}; // Import needed items
+ use std::io::{Read, Write}; // TcpStream implements Read/Write
+ use std::core::Result::{Ok, Err};
+ use std::thread; // May need to spawn new threads for a server
+ use std::time::Duration; // For sleep
 
 /*
 // A Simple TCP Server (Example) - Full implementation details are omitted
 fn start_tcp_server() -> Result<(), net::Error> {
     // Bind to address 127.0.0.1:8080 (start listening)
     let addr_str = "127.0.0.1:8080";
-    // let addr = addr_str.parse::<SocketAddr>()?; // Hypothetical parse method and ? operator
+     let addr = addr_str.parse::<SocketAddr>()?; // Hypothetical parse method and ? operator
 
     let listener = net::TcpListener::bind(addr)?; // Binding can fail
 
@@ -475,34 +464,34 @@ fn start_tcp_server() -> Result<(), net::Error> {
 
     // Accept incoming connections
     // listener.incoming() is a hypothetical iterator
-    // for stream_result in listener.incoming() {
-    //     match stream_result {
-    //         Ok(mut stream) => {
-    //             // Spawn a new thread for each connection
-    //             thread::spawn(move || -> Result<(), io::Error> { // Hypothetical move closure
-    //                 println!("Connection arrived: {:?}", stream.peer_addr()?); // Get peer address
+     for stream_result in listener.incoming() {
+         match stream_result {
+             Ok(mut stream) => {
+                 // Spawn a new thread for each connection
+                 thread::spawn(move || -> Result<(), io::Error> { // Hypothetical move closure
+                     println!("Connection arrived: {:?}", stream.peer_addr()?); // Get peer address
 
-    //                 let mut buffer = [0u8; 512];
-    //                 loop {
-    //                     // Read from the connection
-    //                     let bytes_read = stream.read(&mut buffer)?; // Use Read trait
+                     let mut buffer = [0u8; 512];
+                     loop {
+                         // Read from the connection
+                         let bytes_read = stream.read(&mut buffer)?; // Use Read trait
 
-    //                     if bytes_read == 0 {
-    //                         println!("Connection closed.");
-    //                         break; // EOF
-    //                     }
+                         if bytes_read == 0 {
+                             println!("Connection closed.");
+                             break; // EOF
+                         }
 
-    //                     // Write back what was read (echo)
-    //                     stream.write_all(&buffer[0..bytes_read])?; // Use Write trait
-    //                 }
-    //                 Ok(()) // Thread task finished successfully
-    //             });
-    //         },
-    //         Err(err) => {
-    //             println!("Connection accept error: {}", err.description());
-    //         }
-    //     }
-    // }
+                         // Write back what was read (echo)
+                         stream.write_all(&buffer[0..bytes_read])?; // Use Write trait
+                    }
+                     Ok(()) // Thread task finished successfully
+                 });
+             },
+             Err(err) => {
+                 println!("Connection accept error: {}", err.description());
+             }
+         }
+     }
     Ok(()) // Server loop would not normally finish, added for example
 }
 
@@ -535,11 +524,10 @@ fn main() -> void {
     // connect_to_server(); // Run the client
 }
 */
+```
 8. Concurrency (std::thread) - A Brief Look
 Used for creating and managing new threads of execution.
-
-Kod snippet'i
-
+```
 use std::thread; // Import the thread module
 use std::time::Duration; // Duration is needed for thread::sleep from the time module
 use std::core::Result::{Ok, Err}; // For thread::JoinHandle::join
@@ -572,11 +560,10 @@ fn main() -> void {
 
     println!("Main thread finished.");
 }
+```
 9. Time (std::time)
 Used for managing durations (Duration) and points in time (Instant, SystemTime).
-
-Kod snippet'i
-
+```
 use std::time::{Instant, Duration, SystemTime}; // Import needed items
 use std::thread; // For thread::sleep
 
@@ -597,13 +584,13 @@ fn main() -> void {
     // Creating specific durations
     let five_seconds = Duration::from_secs(5);
     let ten_minutes = Duration::from_secs(60 * 10);
-    // let total_duration = five_seconds + ten_minutes; // If Duration implements the Add trait
+     let total_duration = five_seconds + ten_minutes; // If Duration implements the Add trait
 
     // Using system time
     let system_now = SystemTime::now();
     println!("System time recorded.");
     // Operations like calculating the duration since/until the Unix epoch can be done with SystemTime
-    // let duration_since_epoch = system_now.duration_since(SystemTime::UNIX_EPOCH)?; // Unix_EPOCH constant and Result
+     let duration_since_epoch = system_now.duration_since(SystemTime::UNIX_EPOCH)?; // Unix_EPOCH constant and Result
 
     // Sleep for another duration
     thread::sleep(five_seconds);
@@ -612,11 +599,10 @@ fn main() -> void {
     let total_elapsed = start_time.elapsed(); // Total time elapsed
     println!("Total elapsed time: {} seconds", total_elapsed.as_secs());
 }
+```
 10. Using Traits
 You can call trait methods defined on various types. You can achieve dynamic polymorphism with &dyn Trait.
-
-Kod snippet'i
-
+```
 use std::io::Write; // Need to use the Write trait
 
 // Function that writes data to anything that implements the Write trait
@@ -652,11 +638,10 @@ fn main() -> Result<(), std::io::Error> { // main can return an error!
     // The File handle is automatically closed when it goes out of scope (thanks to the Drop trait)
     Ok(()) // Successful return
 }
+```
 11. Error Handling Patterns (Result and ?)
 Using Result and the ? operator when calling functions that might fail is a common D++ pattern.
-
-Kod snippet'i
-
+```
 use std::io;
 use std::fs;
 use std::core::Result::{Ok, Err};
