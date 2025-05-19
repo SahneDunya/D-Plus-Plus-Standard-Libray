@@ -1,0 +1,81 @@
+// std/time.d++
+
+pub use core::Result;
+pub use core::String;
+pub use core::Error as CoreErrorTrait;
+pub use core::u64; // Re-export u64
+pub use core::u32; // Re-export u32
+
+// Duration: Represents a length of time.
+pub struct Duration {
+    secs: u64,  // Whole seconds
+    nanos: u32, // Fractional nanoseconds (0 to 999,999,999)
+}
+
+impl Duration {
+    // Creates a new Duration from the given number of seconds and nanoseconds.
+    pub fn new(secs: u64, nanos: u32) -> Duration;
+
+    // Creates a new Duration from the given number of seconds.
+    pub fn from_secs(secs: u64) -> Duration { Duration::new(secs, 0) } // Default implementation
+
+    // Creates a new Duration from the given number of milliseconds.
+    pub fn from_millis(millis: u64) -> Duration { Duration::new(millis / 1000, (millis % 1000) as u32 * 1_000_000) } // Example
+
+    // Returns the number of whole seconds in the duration.
+    pub fn as_secs(&self) -> u64;
+
+    // Returns the fractional part of the duration in nanoseconds.
+    pub fn as_nanos(&self) -> u32; // Or u128 if needed for full nanosecond representation
+
+
+    // TODO: Add methods for addition, subtraction, multiplication, division, comparison, etc.
+    // Requires core::Add, core::Sub, core::Mul, core::Div, core::PartialEq, core::Ord, core::PartialOrd traits
+}
+
+
+// Instant: Represents a point in time, relative to an arbitrary epoch.
+// It's useful for measuring time elapsed.
+pub struct Instant { /* internal representation (e.g., nanoseconds since epoch start) */ }
+
+impl Instant {
+    // Returns the current instant.
+    pub fn now() -> Instant;
+
+    // Returns the duration since this instant.
+    pub fn elapsed(&self) -> Duration;
+
+    // Returns the amount of time until another instant.
+     pub fn duration_since(&self, earlier: Instant) -> Duration; // Requires PartialOrd
+
+    // Adds a duration to this instant, returning a new instant.
+     pub fn checked_add(&self, duration: Duration) -> Option<Instant>; // Returns Option on overflow
+     pub fn checked_sub(&self, duration: Duration) -> Option<Instant>; // Returns Option on underflow
+}
+
+
+// SystemTime: Represents a point in time, relative to the system's wall clock.
+// Can be converted to/from Duration since/until the Unix epoch.
+pub struct SystemTime { /* internal representation (e.g., nanoseconds since Unix epoch) */ }
+
+// Error type for SystemTime operations (e.g., getting time fails, converting to epoch fails)
+ pub struct SystemTimeError { /* kind, maybe duration */ } // Needs to implement core::Error
+
+impl SystemTime {
+    // Returns the current system time.
+    pub fn now() -> SystemTime;
+
+    // Returns the amount of time since the Unix epoch (January 1, 1970 0:00 UTC).
+     pub fn duration_since(self, earlier: SystemTime) -> Result<Duration, SystemTimeError>;
+
+    // Returns the amount of time until the Unix epoch.
+     pub fn duration_until(self, later: SystemTime) -> Result<Duration, SystemTimeError>;
+
+    // TODO: Add methods for adding/subtracting duration, converting to other time representations.
+}
+
+
+// Sleeping function (often in thread module, but sometimes in time)
+// pub fn sleep(duration: Duration) -> void; // Re-export from thread?
+
+// TODO: Add date and time formatting, time zones, Monotonic time sources, etc. (more complex)

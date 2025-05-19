@@ -1,0 +1,123 @@
+// std/net.d++
+
+pub use core::Result;
+pub use core::String;
+pub use core::Error as CoreErrorTrait;
+pub use io::Error as IoError; // Reuse IO errors for networking
+
+// Networking specific Error type (can wrap IoError)
+// Often, networking errors are just a subset of IO errors or wrap them.
+pub enum Error {
+    Io(IoError), // Wrap a standard IO error
+    WouldBlock,  // Operation would block (already in IoError, but common in net)
+    TimedOut,    // Operation timed out (already in IoError, but common in net)
+    ConnectionRefused, // (already in IoError)
+    // ... other specific net errors if needed
+    // AddrParseError, // If parsing IP strings can fail
+}
+
+impl CoreErrorTrait for Error {
+    fn description(&self) -> String {
+        match self {
+            Error::Io(io_err) => format!("network I/O error: {}", io_err.description()), // Use core::format! macro?
+            // ... other variants
+            _ => "unknown network error".to_string(),
+        }
+    }
+     // TODO: Implement fmt for Debug/Display
+}
+
+
+// IP Addresses and Socket Addresses
+
+pub struct Ipv4Addr { /* 4 bytes */ } // u32 or [u8; 4] internally?
+impl Ipv4Addr {
+    // pub fn new(a: u8, b: u8, c: u8, d: u8) -> Ipv4Addr; // u8 from core
+    // pub fn to_string(&self) -> String;
+}
+
+pub struct Ipv6Addr { /* 16 bytes */ } // u128 or [u16; 8] or [u8; 16] internally?
+impl Ipv6Addr {
+     pub fn new(segments: [u16; 8]) -> Ipv6Addr; // u16 from core
+     pub fn to_string(&self) -> String;
+}
+
+pub enum IpAddr {
+    V4(Ipv4Addr),
+    V6(Ipv6Addr),
+}
+
+pub struct SocketAddrV4 {
+    ip: Ipv4Addr,
+    port: u16, // u16 from core
+}
+
+pub struct SocketAddrV6 {
+    ip: Ipv6Addr,
+    port: u16, // u16 from core
+    flowinfo: u32, // u32 from core
+    scope_id: u32, // u32 from core
+}
+
+pub enum SocketAddr {
+    V4(SocketAddrV4),
+    V6(SocketAddrV6),
+}
+
+
+// TCP (Transmission Control Protocol)
+
+// TcpStream: A TCP connection to a remote host. Implements io::Read and io::Write.
+pub struct TcpStream { /* internal socket handle */ } // Needs to implement Drop trait
+
+impl TcpStream {
+    // Connects to a remote address.
+    pub fn connect(addr: SocketAddr) -> Result<TcpStream, Error>;
+     pub fn connect_timeout(addr: SocketAddr, timeout: time::Duration) -> Result<TcpStream, Error>;
+
+    // TODO: Implement io::Read for TcpStream { ... }
+    // TODO: Implement io::Write for TcpStream { ... }
+
+    // Shuts down the read, write, or both halves of a TCP connection.
+     pub fn shutdown(&self, how: Shutdown) -> Result<(), Error>; // Needs Shutdown enum { Read, Write, Both }
+}
+
+// TcpListener: A socket which listens for incoming TCP connections.
+pub struct TcpListener { /* internal socket handle */ } // Needs to implement Drop trait
+
+impl TcpListener {
+    // Creates a new TcpListener which will be bound to the specified address.
+    pub fn bind(addr: SocketAddr) -> Result<TcpListener, Error>;
+
+    // Accepts a new incoming connection from this listener.
+    // Returns a new TcpStream and the remote address.
+    pub fn accept(&self) -> Result<(TcpStream, SocketAddr), Error>; // Returns Tuple
+
+    // TODO: Add methods like incoming (iterator), local_addr, set_nonblocking etc.
+}
+
+
+// UDP (User Datagram Protocol)
+
+// UdpSocket: A UDP socket.
+pub struct UdpSocket { /* internal socket handle */ } // Needs to implement Drop trait
+
+impl UdpSocket {
+    // Creates a new UdpSocket which will be bound to the specified address.
+    pub fn bind(addr: SocketAddr) -> Result<UdpSocket, Error>;
+
+    // Sends data on the socket to the remote address.
+    pub fn send_to(&self, buf: &[u8], addr: SocketAddr) -> Result<usize, Error>; // u8, usize from core
+
+    // Receives data from the socket. Returns the number of bytes received and the origin.
+    pub fn recv_from(&self, buf: &mut [u8]) -> Result<(usize, SocketAddr), Error>; // Returns Tuple
+
+    // Sends data on the socket to the peer address previously connected via connect.
+     pub fn send(&self, buf: &[u8]) -> Result<usize, Error>; // Only after connect
+    // Receives data on the socket from the peer address previously connected via connect.
+     pub fn recv(&self, buf: &mut [u8]) -> Result<usize, Error>; // Only after connect
+
+    // TODO: Add methods like connect, local_addr, peer_addr, set_nonblocking etc.
+}
+
+// TODO: Add other networking concepts like DNS resolution, low-level sockets, non-blocking I/O details.

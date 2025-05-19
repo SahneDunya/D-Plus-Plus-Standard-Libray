@@ -1,0 +1,75 @@
+// std/fs.d++
+
+pub use core::Result;
+pub use core::String;
+pub use core::Error as CoreErrorTrait;
+
+// FS errors often use IO errors or have specific ones.
+// Re-export the IO Error enum as the primary error type for fs.
+pub use io::Error;
+
+// File: Represents a file in the file system.
+// It implements the io::Read and io::Write traits.
+pub struct File {
+    // internal file handle/descriptor
+    // Needs to implement Drop trait from core for resource cleanup (closing file)
+    _handle: isize, // isize from core
+}
+
+// File Mode flags (for open function)
+pub enum OpenOptions {
+    // Configuration for how to open a file
+    // Can be built using methods like .read(true), .write(true), .create(true), .append(true) etc.
+}
+
+impl File {
+    // Opens a file in read-only mode.
+    pub fn open(path: &str) -> Result<File, Error>;
+
+    // Opens a file in write-only mode, creating it if it doesn't exist or truncating it if it does.
+    pub fn create(path: &str) -> Result<File, Error>;
+
+    // Opens a file with the specified options.
+     pub fn open_with_options(path: &str, options: OpenOptions) -> Result<File, Error>;
+
+    // Seek to a position within the file.
+     pub fn seek(&mut self, pos: SeekFrom) -> Result<u64, Error>; // Needs SeekFrom enum, u64 from core
+
+    // Get metadata about the file.
+     pub fn metadata(&self) -> Result<Metadata, Error>; // Needs Metadata struct
+}
+
+// Implement Read and Write traits for File
+impl io::Read for File {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, io::Error>;
+    // Implement other read methods...
+}
+
+impl io::Write for File {
+    fn write(&mut self, buf: &[u8]) -> Result<usize, io::Error>;
+    fn flush(&mut self) -> Result<(), io::Error>;
+    // Implement other write methods...
+}
+
+
+// File system operations (typically functions)
+
+// Removes a file from the file system.
+pub fn remove_file(path: &str) -> Result<(), Error>;
+
+// Creates a new directory.
+pub fn create_dir(path: &str) -> Result<(), Error>;
+
+// Removes an empty directory.
+pub fn remove_dir(path: &str) -> Result<(), Error>;
+
+// Reads the entire contents of a file into a string.
+pub fn read_to_string(path: &str) -> Result<String, Error>; // Convenience function
+
+// Writes a string to a file, overwriting any existing content.
+pub fn write(path: &str, contents: &str) -> Result<(), Error>; // Convenience function
+
+// TODO: Add directory operations (read_dir, create_dir_all), symlinks, permissions, etc.
+// TODO: Path manipulation structs (Path, PathBuf) - like Rust
+// pub struct Path { /* borrowed path slice */ }
+// pub struct PathBuf { /* owned, mutable path */ }

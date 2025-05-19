@@ -1,0 +1,60 @@
+// std/math.d++
+
+// Basic Math Constants (often pub const)
+// Using f64 (double precision float) for common math functions
+pub const PI: f64 = 3.141592653589793; // f64 from core
+pub const E: f64 = 2.718281828459045;
+pub const INF: f64; // Represents positive infinity
+pub const NEG_INF: f64; // Represents negative infinity
+pub const NAN: f64; // Represents Not a Number
+
+// Trigonometric functions (often overloaded for float/double/real)
+pub fn sin(x: f64) -> f64;
+pub fn cos(x: f64) -> f64;
+pub fn tan(x: f64) -> f64;
+pub fn asin(x: f64) -> f64; // Arc sine
+pub fn acos(x: f64) -> f64; // Arc cosine
+pub fn atan(x: f64) -> f64; // Arc tangent
+pub fn atan2(y: f64, x: f64) -> f64; // Arc tangent of y/x
+
+// Hyperbolic functions
+pub fn sinh(x: f64) -> f64;
+pub fn cosh(x: f64) -> f64;
+pub fn tanh(x: f64) -> f64;
+
+// Exponential and logarithmic functions
+pub fn exp(x: f64) -> f64; // e^x
+pub fn log(x: f64) -> f64; // Natural logarithm (base e)
+pub fn log10(x: f64) -> f64; // Base 10 logarithm
+pub fn log2(x: f64) -> f64; // Base 2 logarithm
+pub fn pow(base: f64, exp: f64) -> f64; // base^exp
+
+// Power and square root
+pub fn sqrt(x: f64) -> f64; // Square root
+pub fn cbrt(x: f64) -> f64; // Cube root
+
+// Absolute value (often overloaded or generic)
+// Let's use overloaded versions for common numeric types
+pub fn abs(x: int) -> int; // int from core
+pub fn abs(x: long) -> long; // long from core
+pub fn abs(x: float) -> float; // float from core
+pub fn abs(x: f64) -> f64; // f64 from core
+
+// Min and Max (often generic, requires PartialOrd trait)
+pub fn min<T: core::PartialOrd>(a: T, b: T) -> T; // T is generic type
+pub fn max<T: core::PartialOrd>(a: T, b: T) -> T;
+
+// Rounding, floor, ceiling, truncation
+pub fn floor(x: f64) -> f64;
+pub fn ceil(x: f64) -> f64;
+pub fn round(x: f64) -> f64;
+pub fn trunc(x: f64) -> f64; // Towards zero
+
+// Floating-point classification
+pub fn is_nan(x: f64) -> bool; // bool from core
+pub fn is_infinite(x: f64) -> bool;
+pub fn is_finite(x: f64) -> bool;
+pub fn is_normal(x: f64) -> bool;
+pub fn signum(x: f64) -> f64; // Returns +1.0, -1.0, or 0.0 depending on sign
+
+// TODO: Add integer math functions (gcd, lcm), bit manipulation helpers, complex numbers?

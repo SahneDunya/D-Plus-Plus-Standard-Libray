@@ -1,0 +1,94 @@
+// std/collections.d++
+
+pub use core::Option;
+pub use core::Result;
+pub use core::String; // Re-export String
+pub use core::Copy; // Re-export Copy trait
+pub use core::Clone; // Re-export Clone trait
+pub use core::Eq; // Re-export Eq trait
+pub use core::PartialEq; // Re-export PartialEq trait
+pub use core::Hash; // Re-export Hash trait
+pub use core::Default; // Re-export Default trait
+pub use core::usize; // Re-export usize
+
+// Vec<T>: A growable, heap-allocated vector (like std::vector in C++ or Vec in Rust)
+// Elements are stored contiguously in memory.
+pub struct Vec<T> {
+    // Internal representation: pointer to data, length, capacity
+    ptr: *mut T,
+    len: usize,
+    cap: usize,
+}
+
+// Generic implementation block for Vec<T>
+impl<T> Vec<T> {
+    // Creates a new, empty Vec.
+    pub fn new() -> Vec<T>;
+
+    // Creates a new, empty Vec with a specified capacity.
+    pub fn with_capacity(capacity: usize) -> Vec<T>;
+
+    // Appends an element to the end of the Vec.
+    pub fn push(&mut self, elem: T) -> void; // Requires T to be Movable (which is default)
+
+    // Removes and returns the last element of the Vec, or None if it's empty.
+    pub fn pop(&mut self) -> Option<T>; // Returns an Option<T>
+
+    // Returns the number of elements in the Vec.
+    pub fn len(&self) -> usize;
+
+    // Returns true if the Vec contains no elements.
+    pub fn is_empty(&self) -> bool;
+
+    // Returns the total number of elements the Vec can hold without reallocating.
+    pub fn capacity(&self) -> usize;
+
+    // Returns a reference to the element at the given index, or None if the index is out of bounds.
+    pub fn get(&self, index: usize) -> Option<&T>; // Returns Option<&T> (immutable reference)
+
+    // Returns a mutable reference to the element at the given index, or None if the index is out of bounds.
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut T>; // Returns Option<&mut T> (mutable reference)
+
+    // TODO: Add methods like insert, remove, clear, append, extend, iter, iter_mut, into_iter, etc.
+    // Indexing operator `[]` would be handled by compiler sugar over get/get_mut or specific traits (Index/IndexMut).
+}
+
+// Note: Vec needs to handle element Drop if T is not Copy, and reallocation/memory management internally (likely in C++).
+
+// HashMap<K, V>: A hash map (like std::unordered_map in C++ or HashMap in Rust)
+// Stores key-value pairs with O(1) average time complexity for lookups, inserts, and removals.
+// Requires K to implement core::Hash and core::Eq traits.
+pub struct HashMap<K, V> {
+    // internal hash map data
+}
+
+// Generic implementation block for HashMap<K, V> with trait bounds
+impl<K, V> HashMap<K, V> where K: core::Hash + core::Eq {
+    // Creates a new, empty HashMap.
+    pub fn new() -> HashMap<K, V>;
+
+    // Inserts a key-value pair into the map.
+    // If the key already existed, the old value is returned inside Some.
+    pub fn insert(&mut self, key: K, value: V) -> Option<V>; // Returns Option<V>
+
+    // Returns a reference to the value associated with the key, or None if the key is not in the map.
+    pub fn get(&self, key: &K) -> Option<&V>; // Returns Option<&V>
+
+    // Returns a mutable reference to the value associated with the key, or None if the key is not in the map.
+    pub fn get_mut(&mut self, key: &K) -> Option<&mut V>; // Returns Option<&mut V>
+
+    // Removes a key from the map, returning the value associated with it if it existed.
+    pub fn remove(&mut self, key: &K) -> Option<V>; // Returns Option<V>
+
+    // Returns the number of key-value pairs in the map.
+    pub fn len(&self) -> usize;
+
+    // Returns true if the map contains no elements.
+    pub fn is_empty(&self) -> bool;
+
+    // TODO: Add methods like contains_key, entry, retain, clear, iter, iter_mut, into_iter, etc.
+}
+
+// TODO: Add other collections like HashSet<T>, VecDeque<T>, LinkedList<T>, BTreeMap<K, V>, BTreeSet<T>, etc.
+// HashSet<T> would require T to implement core::Hash and core::Eq.
+// BTreeMap/BTreeSet would require K/T to implement core::Ord.

@@ -1,0 +1,119 @@
+// std/core.d++
+
+// Fundamental Traits (Interfaces for basic behavior)
+// These are marker traits or define basic methods for common operations.
+
+pub trait Copy {}       // Indicates that a type can be copied bitwise (no move)
+pub trait Clone {       // Indicates that a type can be explicitly cloned (deep copy)
+    fn clone(&self) -> Self;
+}
+
+pub trait Debug {       // Allows types to be formatted using debug formatters ({:?})
+    // Needs a Formatter type and a Result type for the return
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error>;
+}
+
+pub trait Display {     // Allows types to be formatted using user-facing formatters ({})
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error>;
+}
+
+pub trait Eq {}         // Indicates that a type can be compared for equality (a marker trait, requires PartialEq)
+pub trait PartialEq {   // Allows comparison for partial equality (==, !=)
+    fn eq(&self, other: &Self) -> bool;
+    fn ne(&self, other: &Self) -> bool { !self.eq(other) } // Default implementation
+}
+
+pub trait Ord: Eq + PartialEq + PartialOrd {} // Indicates total ordering (requires other traits)
+pub trait PartialOrd { // Allows comparison for partial ordering (<, >, <=, >=)
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering>;
+    // Default implementations for <, >, <=, >= based on partial_cmp
+}
+
+pub trait Hash {        // Allows types to be used as keys in hash maps
+    fn hash<H: Hasher>(&self, state: &mut H);
+}
+
+pub trait Default {     // Provides a default value for a type
+    fn default() -> Self;
+}
+
+// TODO: Add other fundamental traits like Send, Sync, Sized, etc.
+
+
+// Basic Error Handling Traits/Types
+pub trait Error: Debug + Display { // Basic error trait (requires Debug and Display)
+    fn description(&self) -> String; // Get a basic description of the error
+    // Maybe provide a cause method?
+}
+
+// A common type for returning boxed trait objects representing any error
+// Useful for functions that can return multiple kinds of errors
+pub struct Box<T: ?Sized> { /* Heap allocated pointer */ } // ?Sized allows Box<dyn Trait>
+// pub type Box<dyn Error> = Box<dyn Error>; // Alias for convenience?
+
+// Fundamental Enums
+// Option<T>: Represents an optional value (Some or None)
+pub enum Option<T> {
+    Some(T), // Contains a value of type T
+    None,    // Contains no value
+}
+
+// Result<T, E>: Represents either success (Ok) or failure (Err)
+pub enum Result<T, E> {
+    Ok(T),   // Contains a success value of type T
+    Err(E),  // Contains an error value of type E
+}
+
+
+// String Types
+// String: Heap-allocated, owned, mutable (like D string) or maybe immutable (like Rust String)
+// Let's assume it's a heap-allocated, growable, UTF-8 string, ownership-managed.
+pub struct String {
+    // Internal representation: e.g., pointer to data, length, capacity
+    ptr: *mut u8,
+    len: usize, // usize is platform-dependent size type
+    cap: usize,
+}
+
+impl String {
+    pub fn new() -> String; // Creates an empty String
+    pub fn from(s: &str) -> String; // Creates a String from a string slice
+    pub fn push_str(&mut self, s: &str) -> void; // Appends a string slice
+    pub fn len(&self) -> usize; // Get length in bytes
+    pub fn to_string(something: &Display) -> String; // Generic conversion using Display trait
+}
+
+
+// Str: A slice into a String or static string data (like Rust &str)
+// Represents a borrowed view of UTF-8 string data.
+pub struct Str {
+    // Internal representation: pointer to data, length
+    ptr: *const u8, // *const indicates immutable pointer
+    len: usize,
+}
+
+// Note: The 'string' keyword in D++ syntax might be an alias for &str or String,
+// or overloaded based on context (literal "..." creating &str, variable declaration `let s: string` being String).
+// Let's assume "..." literals create &str, and `string` type usually means String.
+// So, "Hello".to_string() converts an &str literal to a String.
+
+// usize, isize: Platform-dependent integer types (size of a pointer)
+pub type usize = uint; // Or a dedicated primitive type
+pub type isize = int;  // Or a dedicated primitive type
+
+// Other fundamental types (u8, i8, u16, i16, u32, i32, u64, i64, f32, f64)
+// These are usually primitive keywords, but can be aliased here for clarity.
+// pub type u8 = ubyte; // Example alias
+
+// Basic Formatting Helpers (used by Debug/Display traits)
+pub struct Formatter { /* ... */ } // Needs methods like write_str, write_int, etc.
+
+// Ordering enum (used by PartialOrd/Ord)
+pub enum Ordering { Less, Equal, Greater, }
+
+// Hasher trait/helpers (used by Hash)
+pub trait Hasher { /* ... */ } // Needs methods like write_usize, finish
+
+// TODO: Other core types like characters (char), booleans (bool), integers (int, uint), floats (float, double, real) - these are mostly primitive keywords but traits implemented for them live here.
+// TODO: Pointers (*const T, *mut T) and References (&T, &mut T) are syntax elements, not defined here.
+// TODO: Slice type for arrays [T] (like &[T]), represented as struct { ptr: *const T, len: usize }
