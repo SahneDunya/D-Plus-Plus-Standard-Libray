@@ -1,0 +1,69 @@
+/*
+  memory_security.d++ - D++ Standard Library: Secure Memory Utilities
+  Güvenli bellek işlemleri için yardımcı fonksiyonlar ve yapılar.
+*/
+
+namespace std::memory::security {
+
+  // Güvenli bellek sıfırlama (örneğin şifre silme gibi)
+  func secure_zero(buffer: &mut [byte]) {
+    for (i in 0..buffer.len()) {
+      buffer[i] = 0;
+    }
+    volatile_write(buffer); // Compiler optimization'a karşı koruma
+  }
+
+  // Bellek karşılaştırması zaman sabitliği ile (timing-attack korumalı)
+  func secure_equals(a: &[byte], b: &[byte]) -> bool {
+    if (a.len() != b.len()) return false;
+
+    mut result: byte = 0;
+    for (i in 0..a.len()) {
+      result |= a[i] ^ b[i];
+    }
+    return result == 0;
+  }
+
+  // Güvenli, sıfırlanabilir veri kapsayıcısı
+  struct SecureBox<T> {
+    data: T;
+    dropped: bool = false;
+
+    // Güvenli erişim
+    func get() -> &T {
+      if (dropped) panic("SecureBox: erişilen veri yok edildi!");
+      return &data;
+    }
+
+    func get_mut() -> &mut T {
+      if (dropped) panic("SecureBox: erişilen veri yok edildi!");
+      return &mut data;
+    }
+
+    // Manuel yok etme (zero + invalidate)
+    func destroy() {
+      secure_zero_bytes(&mut data);
+      dropped = true;
+    }
+  }
+
+  // Byte düzeyinde veri sıfırlama - generic
+  func secure_zero_bytes<T>(obj: &mut T) {
+    ptr: *mut byte = reinterpret_cast(obj);
+    size: usize = sizeof<T>();
+    for (i in 0..size) {
+      ptr[i] = 0;
+    }
+    volatile_write_range(ptr, size);
+  }
+
+  // Güvenli bir şekilde rastgele veri üretimi
+  func secure_random_bytes(len: usize) -> list<byte> {
+    return std::random::secure_bytes(len);
+  }
+
+  // Compiler optimization'a karşı yazma engelleyici (intrinsic ya da inline asm ile tanımlanmalı)
+  extern func volatile_write(buf: &[byte]);
+  extern func volatile_write_range(ptr: *mut byte, len: usize);
+
+}
