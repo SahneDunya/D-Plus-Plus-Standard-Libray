@@ -1,0 +1,84 @@
+// http.d++ - D++ Standard Library: HTTP Utilities
+
+namespace std::http {
+
+  enum HttpMethod {
+    GET,
+    POST,
+    PUT,
+    DELETE,
+    PATCH,
+    HEAD,
+    OPTIONS
+  }
+
+  struct HttpRequest {
+    method: HttpMethod;
+    url: string;
+    headers: map<string, string>;
+    body: string;
+  }
+
+  struct HttpResponse {
+    status_code: int;
+    headers: map<string, string>;
+    body: string;
+  }
+
+  // Sends an HTTP request and returns a response
+  func send(request: HttpRequest) -> HttpResponse | null {
+    return platform::http_send(request);
+  }
+
+  // Convenience function for GET requests
+  func get(url: string, headers: map<string, string> = {}) -> HttpResponse | null {
+    return send(HttpRequest{
+      method: GET,
+      url: url,
+      headers: headers,
+      body: ""
+    });
+  }
+
+  // Convenience function for POST requests
+  func post(url: string, body: string, headers: map<string, string> = {}) -> HttpResponse | null {
+    return send(HttpRequest{
+      method: POST,
+      url: url,
+      headers: headers,
+      body: body
+    });
+  }
+
+  // URL encoding
+  func encode_url(input: string) -> string {
+    return platform::url_encode(input);
+  }
+
+  // URL decoding
+  func decode_url(input: string) -> string {
+    return platform::url_decode(input);
+  }
+
+  // Parses URL and returns components
+  struct UrlComponents {
+    scheme: string;
+    host: string;
+    port: int;
+    path: string;
+    query: string;
+  }
+
+  func parse_url(url: string) -> UrlComponents {
+    return platform::parse_url(url);
+  }
+
+  // Platform-specific bindings
+  extern namespace platform {
+    func http_send(request: HttpRequest) -> HttpResponse | null;
+    func url_encode(input: string) -> string;
+    func url_decode(input: string) -> string;
+    func parse_url(url: string) -> UrlComponents;
+  }
+
+} // namespace std::http
