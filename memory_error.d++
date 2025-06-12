@@ -1,0 +1,77 @@
+// memory_error.d++ - D++ Standard Library: Memory Error Types and Utilities
+
+namespace std::memory::error {
+
+  // Genel bellek hatası türü
+  class MemoryError : Error {
+    constructor(msg: string) {
+      super("MemoryError: " + msg);
+    }
+  }
+
+  // Geçersiz serbest bırakma (ör: çifte free)
+  class DoubleFreeError : MemoryError {
+    constructor() {
+      super("Attempted to free memory that was already freed.");
+    }
+  }
+
+  // Geçersiz erişim (ör: use-after-free veya null pointer dereference)
+  class InvalidAccessError : MemoryError {
+    constructor() {
+      super("Attempted to access invalid or released memory.");
+    }
+  }
+
+  // Taşma hatası (ör: buffer overflow)
+  class OverflowError : MemoryError {
+    constructor() {
+      super("Buffer overflow or memory boundary violation.");
+    }
+  }
+
+  // Yetersiz bellek (allocation başarısız)
+  class OutOfMemoryError : MemoryError {
+    constructor() {
+      super("Memory allocation failed: insufficient memory.");
+    }
+  }
+
+  // Uyumsuz tip ataması (ör: yanlış türde pointer cast)
+  class TypeMismatchError : MemoryError {
+    constructor(expected: string, found: string) {
+      super("Type mismatch: expected " + expected + ", but found " + found);
+    }
+  }
+
+  // Yardımcı fonksiyon: güvenli pointer erişimi
+  func check_not_null<T>(ptr: *T) -> *T {
+    if (ptr == null) {
+      throw InvalidAccessError();
+    }
+    return ptr;
+  }
+
+  // Yardımcı fonksiyon: sınır kontrolü
+  func check_bounds(index: usize, size: usize) {
+    if (index >= size) {
+      throw OverflowError();
+    }
+  }
+
+  // Yardımcı fonksiyon: tahsis sonrası kontrol
+  func check_allocation<T>(ptr: *T) -> *T {
+    if (ptr == null) {
+      throw OutOfMemoryError();
+    }
+    return ptr;
+  }
+
+  // Yardımcı fonksiyon: tür karşılaştırması
+  func check_type(expected: string, actual: string) {
+    if (expected != actual) {
+      throw TypeMismatchError(expected, actual);
+    }
+  }
+
+}
