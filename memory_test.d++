@@ -1,0 +1,90 @@
+// memory_test.d++ - D++ Standard Library: Memory Unit Tests
+
+use std::memory_static;
+use std::memory_dynamic;
+use std::memory_security;
+use std::memory_error;
+use std::error;
+use std::string;
+
+namespace std::memory_test {
+
+  // Test çıktısı için yardımcı fonksiyon
+  func assert_equal<T>(a: T, b: T, msg: string) {
+    if (a != b) {
+      raise(error::Error("Test failed: " + msg + " (expected " + string::to(a) + ", got " + string::to(b) + ")"));
+    }
+  }
+
+  func test_static_alloc() {
+    block := memory_static::alloc(128);
+    assert_equal(memory_static::size(block), 128, "Static allocation size mismatch");
+    memory_static::free(block);
+  }
+
+  func test_static_double_free() {
+    block := memory_static::alloc(64);
+    memory_static::free(block);
+    try {
+      memory_static::free(block);  // İkinci kez free hatası beklenir
+      raise(error::Error("Double free should have failed"));
+    } catch (e: memory_error::DoubleFreeError) {
+      // Beklenen hata
+    }
+  }
+
+  func test_dynamic_alloc_resize() {
+    block := memory_dynamic::alloc(32);
+    block = memory_dynamic::resize(block, 64);
+    assert_equal(memory_dynamic::size(block), 64, "Dynamic resize failed");
+    memory_dynamic::free(block);
+  }
+
+  func test_buffer_overflow() {
+    block := memory_dynamic::alloc(16);
+    try {
+      memory_security::write(block, 20, 42); // sınırı aşan yazım
+      raise(error::Error("Buffer overflow write should have failed"));
+    } catch (e: memory_error::AccessViolationError) {
+      // Beklenen hata
+    }
+    memory_dynamic::free(block);
+  }
+
+  func test_secure_zero() {
+    block := memory_dynamic::alloc(8);
+    for (i in 0..8) {
+      memory_security::write(block, i, 255);
+    }
+    memory_security::zero(block);
+    for (i in 0..8) {
+      val := memory_security::read(block, i);
+      assert_equal(val, 0, "Secure zeroing failed at byte " + string::to(i));
+    }
+    memory_dynamic::free(block);
+  }
+
+  func test_ownership_transfer() {
+    block1 := memory_dynamic::alloc(64);
+    owner := memory_security::claim(block1);
+    try {
+      memory_security::claim(block1); // iki kez sahiplenmeye çalışmak hata
+      raise(error::Error("Ownership claim should have failed"));
+    } catch (e: memory_error::OwnershipError) {
+      // Beklenen hata
+    }
+    memory_security::release(owner);
+  }
+
+  // Tüm testleri çalıştır
+  func run_all() {
+    test_static_alloc();
+    test_static_double_free();
+    test_dynamic_alloc_resize();
+    test_buffer_overflow();
+    test_secure_zero();
+    test_ownership_transfer();
+    print("All memory tests passed.");
+  }
+
+}
