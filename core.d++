@@ -1,0 +1,76 @@
+// core.d++ - D++ Standard Library: Core Definitions
+
+namespace std::core {
+
+  // Basic option type for nullable values
+  enum Option<T> {
+    Some(T),
+    None
+  }
+
+  // Result type for error handling without exceptions
+  enum Result<T, E> {
+    Ok(T),
+    Err(E)
+  }
+
+  // Unit type (like void)
+  struct Unit {}
+
+  // Pair / tuple-like structure
+  struct Pair<A, B> {
+    first: A;
+    second: B;
+  }
+
+  // Common trait checks (metaprogramming)
+  trait is_integer<T> = __builtin::is_integer(T);
+  trait is_float<T> = __builtin::is_float(T);
+  trait is_numeric<T> = is_integer<T> || is_float<T>;
+  trait is_pointer<T> = __builtin::is_pointer(T);
+  trait is_copy<T> = __builtin::is_copyable(T);
+  trait is_move<T> = __builtin::is_movable(T);
+
+  // Panic mechanism (unrecoverable error)
+  func panic(message: string) -> never {
+    platform::abort("Panic: " + message);
+  }
+
+  // Assert (debug only)
+  func assert(cond: bool, message: string = "Assertion failed") {
+    if (!cond) panic(message);
+  }
+
+  // Identity function
+  func identity<T>(x: T) -> T {
+    return x;
+  }
+
+  // Default value function
+  func default<T>() -> T {
+    return __builtin::default_value<T>();
+  }
+
+  // Size of a type in bytes
+  func sizeof<T>() -> usize {
+    return __builtin::sizeof<T>();
+  }
+
+  // Alignment of a type in bytes
+  func alignof<T>() -> usize {
+    return __builtin::alignof<T>();
+  }
+
+  // Swap values
+  func swap<T>(ref a: T, ref b: T) {
+    let temp = a;
+    a = b;
+    b = temp;
+  }
+
+  // Core platform bindings
+  extern namespace platform {
+    func abort(reason: string) -> never;
+  }
+
+} // namespace std::core
