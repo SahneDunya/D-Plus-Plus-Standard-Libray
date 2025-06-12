@@ -1,0 +1,94 @@
+// html.d++ - D++ Standard Library: HTML Generation Utilities
+
+namespace std::html {
+
+  struct Attribute {
+    name: string;
+    value: string;
+  }
+
+  struct Element {
+    tag: string;
+    attributes: list<Attribute>;
+    children: list<Element>;
+    text_content: string;
+    self_closing: bool;
+  }
+
+  // Kaçış karakterleri
+  func escape(text: string) -> string {
+    return text.replace("&", "&amp;")
+               .replace("<", "&lt;")
+               .replace(">", "&gt;")
+               .replace("\"", "&quot;")
+               .replace("'", "&#39;");
+  }
+
+  // Yeni element oluştur
+  func create(tag: string, self_closing: bool = false) -> Element {
+    return Element(tag, [], [], "", self_closing);
+  }
+
+  // Öznitelik ekle
+  func set_attr(el: Element, name: string, value: string) -> Element {
+    el.attributes.append(Attribute(name, value));
+    return el;
+  }
+
+  // Metin içerik ekle
+  func set_text(el: Element, text: string) -> Element {
+    el.text_content = text;
+    return el;
+  }
+
+  // Alt eleman ekle
+  func append_child(el: Element, child: Element) -> Element {
+    el.children.append(child);
+    return el;
+  }
+
+  // Elementi HTML string'e dönüştür
+  func render(el: Element, indent: int = 0) -> string {
+    ind := "  ".repeat(indent);
+    html := ind + "<" + el.tag;
+
+    for (attr in el.attributes) {
+      html += " " + attr.name + "=\"" + escape(attr.value) + "\"";
+    }
+
+    if (el.self_closing && el.children.is_empty() && el.text_content == "") {
+      return html + " />\n";
+    }
+
+    html += ">\n";
+
+    if (el.text_content != "") {
+      html += ind + "  " + escape(el.text_content) + "\n";
+    }
+
+    for (child in el.children) {
+      html += render(child, indent + 1);
+    }
+
+    html += ind + "</" + el.tag + ">\n";
+    return html;
+  }
+
+  // Convenience: HTML belgesi iskeleti
+  func document(title: string, body_content: list<Element>) -> string {
+    head := create("head")
+      .append_child(create("title").set_text(title));
+
+    body := create("body");
+    for (el in body_content) {
+      body.append_child(el);
+    }
+
+    html := create("html")
+      .append_child(head)
+      .append_child(body);
+
+    return "<!DOCTYPE html>\n" + render(html);
+  }
+
+}
