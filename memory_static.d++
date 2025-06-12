@@ -1,0 +1,66 @@
+// memory_static.d++ - D++ Standard Library: Static Memory Allocation
+
+namespace std::memory_static {
+
+  // Statik bellek havuzu tanımı (compile-time boyutlu)
+  struct StaticPool {
+    buffer: [u8; SIZE];
+    used: usize;
+  }
+
+  const SIZE: usize = 65536; // 64 KB default statik havuz boyutu
+  let global_pool = StaticPool { buffer: [0; SIZE], used: 0 };
+
+  // Statik belleği sıfırlar
+  func reset(pool: ref StaticPool) {
+    pool.used = 0;
+  }
+
+  // Bellekten belirli boyutta blok ayırır, null dönebilir
+  func alloc(pool: ref StaticPool, size: usize, align: usize = 8) -> ptr<u8> | null {
+    let start = align_up(pool.used, align);
+    if start + size > SIZE {
+      return null;
+    }
+    pool.used = start + size;
+    return &pool.buffer[start];
+  }
+
+  // Hizalama yardımı
+  func align_up(value: usize, align: usize) -> usize {
+    return (value + align - 1) & ~(align - 1);
+  }
+
+  // Küresel havuzdan bellek ayırma (default kullanım)
+  func malloc(size: usize, align: usize = 8) -> ptr<u8> | null {
+    return alloc(&global_pool, size, align);
+  }
+
+  // Küresel havuzu sıfırlar
+  func clear() {
+    reset(&global_pool);
+  }
+
+  // Ayırma işlemini geri alma (stack-like davranış)
+  struct Marker {
+    pos: usize;
+  }
+
+  func mark(pool: ref StaticPool) -> Marker {
+    return Marker { pos: pool.used };
+  }
+
+  func rewind(pool: ref StaticPool, marker: Marker) {
+    pool.used = marker.pos;
+  }
+
+  // Ayırma işlemini izlemek için kullanım raporu
+  func used_memory(pool: ref StaticPool) -> usize {
+    return pool.used;
+  }
+
+  func remaining_memory(pool: ref StaticPool) -> usize {
+    return SIZE - pool.used;
+  }
+
+}
