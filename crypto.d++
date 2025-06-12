@@ -1,0 +1,71 @@
+// crypto.d++ - D++ Standard Library: Cryptography Utilities
+
+namespace std::crypto {
+
+  // Hash Algorithms
+
+  func sha256(data: bytes) -> bytes {
+    return platform::sha256(data);
+  }
+
+  func sha1(data: bytes) -> bytes {
+    return platform::sha1(data);
+  }
+
+  func md5(data: bytes) -> bytes {
+    return platform::md5(data);
+  }
+
+  // HMAC
+
+  func hmac_sha256(key: bytes, message: bytes) -> bytes {
+    return platform::hmac_sha256(key, message);
+  }
+
+  // Symmetric Encryption (AES)
+
+  func aes_encrypt(data: bytes, key: bytes, iv: bytes) -> bytes {
+    return platform::aes_encrypt(data, key, iv);
+  }
+
+  func aes_decrypt(data: bytes, key: bytes, iv: bytes) -> bytes {
+    return platform::aes_decrypt(data, key, iv);
+  }
+
+  // Random key generation
+
+  func random_bytes(n: int) -> bytes {
+    return platform::random_bytes(n);
+  }
+
+  // Base64 encoding/decoding
+
+  func base64_encode(data: bytes) -> string {
+    return platform::base64_encode(data);
+  }
+
+  func base64_decode(data: string) -> bytes {
+    return platform::base64_decode(data);
+  }
+
+  // Public-key stubs (future extension)
+  // func rsa_encrypt(...)
+  // func rsa_decrypt(...)
+
+  // Platform bindings
+  extern namespace platform {
+    func sha256(data: bytes) -> bytes;
+    func sha1(data: bytes) -> bytes;
+    func md5(data: bytes) -> bytes;
+    func hmac_sha256(key: bytes, message: bytes) -> bytes;
+
+    func aes_encrypt(data: bytes, key: bytes, iv: bytes) -> bytes;
+    func aes_decrypt(data: bytes, key: bytes, iv: bytes) -> bytes;
+
+    func random_bytes(n: int) -> bytes;
+
+    func base64_encode(data: bytes) -> string;
+    func base64_decode(data: string) -> bytes;
+  }
+
+} // namespace std::crypto
