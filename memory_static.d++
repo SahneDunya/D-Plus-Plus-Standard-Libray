@@ -1,66 +1,81 @@
-// memory_static.d++ - D++ Standard Library: Static Memory Allocation
+// memory_static.d++ - D++ Standard Library: Static Memory Management with Ownership Semantics
 
-namespace std::memory_static {
+namespace std::memory::static {
 
-  // Statik bellek havuzu tanımı (compile-time boyutlu)
-  struct StaticPool {
-    buffer: [u8; SIZE];
-    used: usize;
-  }
+  // Trait to disable copying and enable move-only semantics
+  @no_copy
+  struct UniquePtr<T> {
+    ptr: *T;
 
-  const SIZE: usize = 65536; // 64 KB default statik havuz boyutu
-  let global_pool = StaticPool { buffer: [0; SIZE], used: 0 };
-
-  // Statik belleği sıfırlar
-  func reset(pool: ref StaticPool) {
-    pool.used = 0;
-  }
-
-  // Bellekten belirli boyutta blok ayırır, null dönebilir
-  func alloc(pool: ref StaticPool, size: usize, align: usize = 8) -> ptr<u8> | null {
-    let start = align_up(pool.used, align);
-    if start + size > SIZE {
-      return null;
+    // Constructor: takes ownership
+    func new(ptr: *T) -> Self {
+      return Self { ptr };
     }
-    pool.used = start + size;
-    return &pool.buffer[start];
+
+    // Move constructor: transfers ownership
+    func move(self: ref mut Self) -> Self {
+      let new_owner = Self { ptr: self.ptr };
+      self.ptr = null;
+      return new_owner;
+    }
+
+    // Drop: automatically called to free memory
+    func drop(self: ref mut Self) {
+      if self.ptr != null {
+        dealloc<T>(self.ptr);
+        self.ptr = null;
+      }
+    }
+
+    // Borrow immutable reference
+    func borrow(self: ref Self) -> &T {
+      return &*self.ptr;
+    }
+
+    // Borrow mutable reference
+    func borrow_mut(self: ref mut Self) -> &mut T {
+      return &mut *self.ptr;
+    }
   }
 
-  // Hizalama yardımı
-  func align_up(value: usize, align: usize) -> usize {
-    return (value + align - 1) & ~(align - 1);
+  // Allocates memory for a single value of type T
+  func alloc<T>() -> *T {
+    return platform::alloc(sizeof(T)) as *T;
   }
 
-  // Küresel havuzdan bellek ayırma (default kullanım)
-  func malloc(size: usize, align: usize = 8) -> ptr<u8> | null {
-    return alloc(&global_pool, size, align);
+  // Allocates and zero-initializes memory for a single value of type T
+  func calloc<T>() -> *T {
+    return platform::calloc(1, sizeof(T)) as *T;
   }
 
-  // Küresel havuzu sıfırlar
-  func clear() {
-    reset(&global_pool);
+  // Frees memory for a single value
+  func dealloc<T>(ptr: *T) {
+    platform::free(ptr as *void);
   }
 
-  // Ayırma işlemini geri alma (stack-like davranış)
-  struct Marker {
-    pos: usize;
+  // Copies memory from src to dest
+  func copy<T>(dest: *T, src: *T, count: usize) {
+    platform::mem_copy(dest as *void, src as *void, count * sizeof(T));
   }
 
-  func mark(pool: ref StaticPool) -> Marker {
-    return Marker { pos: pool.used };
+  // Sets memory to a specific byte value
+  func fill<T>(dest: *T, byte: u8, count: usize) {
+    platform::mem_set(dest as *void, byte, count * sizeof(T));
   }
 
-  func rewind(pool: ref StaticPool, marker: Marker) {
-    pool.used = marker.pos;
+  // Compares memory regions
+  func compare<T>(a: *T, b: *T, count: usize) -> int {
+    return platform::mem_compare(a as *void, b as *void, count * sizeof(T));
   }
 
-  // Ayırma işlemini izlemek için kullanım raporu
-  func used_memory(pool: ref StaticPool) -> usize {
-    return pool.used;
+  // Platform-specific memory functions
+  extern namespace platform {
+    func alloc(size: usize) -> *void;
+    func calloc(count: usize, size: usize) -> *void;
+    func free(ptr: *void);
+    func mem_copy(dest: *void, src: *void, size: usize);
+    func mem_set(dest: *void, byte: u8, size: usize);
+    func mem_compare(a: *void, b: *void, size: usize) -> int;
   }
 
-  func remaining_memory(pool: ref StaticPool) -> usize {
-    return SIZE - pool.used;
-  }
-
-}
+} // namespace std::memory::static
