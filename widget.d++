@@ -1,0 +1,142 @@
+// widget.d++ - D++ Standard Library: UI Widget Framework
+
+namespace std::gui::widget {
+
+  struct Size {
+    width: int;
+    height: int;
+  }
+
+  struct Point {
+    x: int;
+    y: int;
+  }
+
+  struct Rect {
+    origin: Point;
+    size: Size;
+  }
+
+  enum Align {
+    Left,
+    Center,
+    Right,
+    Justify
+  }
+
+  trait Widget {
+    func draw(ctx: DrawContext);
+    func resize(new_size: Size);
+    func handle_event(event: UIEvent);
+    func bounds() -> Rect;
+    func set_bounds(rect: Rect);
+  }
+
+  class Label: Widget {
+    text: string;
+    alignment: Align;
+    rect: Rect;
+
+    func draw(ctx: DrawContext) {
+      ctx.draw_text(text, rect, alignment);
+    }
+
+    func resize(new_size: Size) {
+      rect.size = new_size;
+    }
+
+    func handle_event(event: UIEvent) {}
+
+    func bounds() -> Rect {
+      return rect;
+    }
+
+    func set_bounds(r: Rect) {
+      rect = r;
+    }
+  }
+
+  class Button: Widget {
+    text: string;
+    rect: Rect;
+    on_click: func();
+
+    func draw(ctx: DrawContext) {
+      ctx.draw_button(rect, text);
+    }
+
+    func resize(new_size: Size) {
+      rect.size = new_size;
+    }
+
+    func handle_event(event: UIEvent) {
+      if event.type == UIEventType::Click and rect.contains(event.position) {
+        on_click();
+      }
+    }
+
+    func bounds() -> Rect {
+      return rect;
+    }
+
+    func set_bounds(r: Rect) {
+      rect = r;
+    }
+  }
+
+  class Container: Widget {
+    children: list<Widget>;
+    rect: Rect;
+
+    func draw(ctx: DrawContext) {
+      for child in children {
+        child.draw(ctx);
+      }
+    }
+
+    func resize(new_size: Size) {
+      rect.size = new_size;
+      for child in children {
+        child.resize(new_size);
+      }
+    }
+
+    func handle_event(event: UIEvent) {
+      for child in children {
+        child.handle_event(event);
+      }
+    }
+
+    func bounds() -> Rect {
+      return rect;
+    }
+
+    func set_bounds(r: Rect) {
+      rect = r;
+    }
+
+    func add(widget: Widget) {
+      children.append(widget);
+    }
+  }
+
+  extern namespace platform {
+    struct DrawContext {
+      func draw_text(text: string, rect: Rect, align: Align);
+      func draw_button(rect: Rect, label: string);
+    }
+
+    struct UIEvent {
+      type: UIEventType;
+      position: Point;
+    }
+
+    enum UIEventType {
+      Click,
+      Hover,
+      KeyDown,
+      KeyUp
+    }
+  }
+
+} // namespace std::gui::widget
