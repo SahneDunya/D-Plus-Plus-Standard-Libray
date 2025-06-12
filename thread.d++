@@ -1,59 +1,100 @@
-// std/thread.d++
+// thread.d++ - D++ Standart Kütüphanesi: Çoklu İş Parçacığı (Multithreading)
 
-pub use core::Result;
-pub use core::String;
-pub use core::Error as CoreErrorTrait;
+module std.thread;
 
-// Thread specific Error types
-pub struct JoinError { /* Details about why joining failed, e.g., panicked */ } // Needs to implement core::Error
-impl CoreErrorTrait for JoinError {
-    fn description(&self) -> String { "Thread panicked or failed to join".to_string() /* ... */ }
-    // TODO: Implement Debug/Display
+import std.core;
+import std.time;
+
+class Thread {
+    private native id;
+    private Func<void()> entry;
+
+    public Thread(Func<void()> fn) {
+        this.entry = fn;
+    }
+
+    public void start() {
+        this.id = nativeThreadStart(this.entry);
+    }
+
+    public void join() {
+        nativeThreadJoin(this.id);
+    }
+
+    public static void sleep(Duration duration) {
+        nativeSleep(duration.totalMilliseconds());
+    }
 }
 
+class Mutex {
+    private native handle;
 
-// JoinHandle<T>: A handle that represents a spawned thread.
-// It can be used to wait for the thread to finish and retrieve its return value.
-// T is the type of the value returned by the thread's function.
-pub struct JoinHandle<T> {
-    // internal handle
-    // Needs to implement Send trait from core (safe to send between threads)
+    public this() {
+        handle = nativeMutexCreate();
+    }
+
+    public void lock() {
+        nativeMutexLock(handle);
+    }
+
+    public void unlock() {
+        nativeMutexUnlock(handle);
+    }
+
+    public void destroy() {
+        nativeMutexDestroy(handle);
+    }
+
+    ~this() {
+        destroy();
+    }
 }
 
-// Generic implementation block for JoinHandle<T>
-impl<T> JoinHandle<T> {
-    // Waits for the associated thread to finish.
-    // Returns the thread's result if it completed successfully, or a JoinError if it panicked.
-    pub fn join(self) -> Result<T, JoinError>; // Takes ownership of the handle
+class Condition {
+    private native cond;
+    private Mutex mtx;
+
+    public this(Mutex mutex) {
+        this.mtx = mutex;
+        cond = nativeCondCreate();
+    }
+
+    public void wait() {
+        nativeCondWait(cond, mtx.handle);
+    }
+
+    public void notifyOne() {
+        nativeCondNotifyOne(cond);
+    }
+
+    public void notifyAll() {
+        nativeCondNotifyAll(cond);
+    }
+
+    public void destroy() {
+        nativeCondDestroy(cond);
+    }
+
+    ~this() {
+        destroy();
+    }
 }
 
+// Native bindinglerin alt seviyede tanımlandığı yer
+extern(C) {
+    native id nativeThreadStart(Func<void()> entry);
+    void nativeThreadJoin(native id);
 
-// Function to spawn a new thread
-// F is the type of the closure/function to run in the thread.
-// T is the return type of F.
-// The closure F must be Send + 'static (or similar concepts for thread safety and lifetime).
-pub fn spawn<F, T>(f: F) -> JoinHandle<T>; // Needs closure support in language
+    void nativeSleep(int ms);
 
-// Current Thread handle
-// Allows interacting with the thread the code is currently running on.
-pub struct Thread { /* internal handle */ } // Needs to implement Clone, Eq, PartialEq, Debug
+    native handle nativeMutexCreate();
+    void nativeMutexLock(native handle);
+    void nativeMutexUnlock(native handle);
+    void nativeMutexDestroy(native handle);
 
-// Get a handle to the current thread.
-pub fn current() -> Thread;
-
-impl Thread {
-    // Gets the unique identifier of the thread.
-     pub fn id(&self) -> ThreadId; // Needs ThreadId type (e.g., struct ThreadId(usize))
-
-    // Joins the current thread to another thread (waits for the other thread).
-    // This is tricky, usually you join from the parent on a JoinHandle.
-     pub fn join(self) -> Result<(), JoinError>; // This is unlikely API
-
-    // Suspends the current thread for a specified duration.
-    pub fn sleep(duration: time::Duration) -> void; // Needs time::Duration from time module
+    native handle nativeCondCreate();
+    void nativeCondWait(native handle, native handle);
+    void nativeCondNotifyOne(native handle);
+    void nativeCondNotifyAll(native handle);
+    void nativeCondDestroy(native handle);
 }
-
-// TODO: Add synchronization primitives (Mutex, RwLock, Channel) - maybe in a std::sync module.
-// Mutex<T> requires T to implement Send + ?Sized.
-// Channels require T to implement Send.
-// TODO: Add ThreadLocal storage.
