@@ -1,0 +1,73 @@
+// css.d++ - D++ Standard Library: CSS Utilities
+
+namespace std::css {
+
+  struct Declaration {
+    property: string;
+    value: string;
+  }
+
+  struct Rule {
+    selector: string;
+    declarations: list<Declaration>;
+  }
+
+  struct Stylesheet {
+    rules: list<Rule>;
+  }
+
+  // Yeni boş stylesheet oluştur
+  func create_stylesheet() -> Stylesheet {
+    return Stylesheet([]);
+  }
+
+  // Yeni rule (kural) oluştur
+  func create_rule(selector: string) -> Rule {
+    return Rule(selector, []);
+  }
+
+  // Bir rule içine stil tanımı ekle
+  func add_declaration(rule: Rule, property: string, value: string) -> Rule {
+    rule.declarations.append(Declaration(property, value));
+    return rule;
+  }
+
+  // Stylesheet'e rule ekle
+  func add_rule(sheet: Stylesheet, rule: Rule) -> Stylesheet {
+    sheet.rules.append(rule);
+    return sheet;
+  }
+
+  // CSS kodunu string olarak üret
+  func render(sheet: Stylesheet) -> string {
+    css := "";
+    for (rule in sheet.rules) {
+      css += rule.selector + " {\n";
+      for (decl in rule.declarations) {
+        css += "  " + decl.property + ": " + decl.value + ";\n";
+      }
+      css += "}\n\n";
+    }
+    return css;
+  }
+
+  // Kısa yol: bir sınıf tanımı oluştur ve stylesheet'e ekle
+  func define_class(sheet: Stylesheet, class_name: string, styles: map<string, string>) -> Stylesheet {
+    rule := create_rule("." + class_name);
+    for ((prop, val) in styles) {
+      rule = add_declaration(rule, prop, val);
+    }
+    return add_rule(sheet, rule);
+  }
+
+  // Ortak yardımcı stiller
+  const display_none = map("display", "none");
+  const flex_center = map(
+    "display", "flex",
+    "justify-content", "center",
+    "align-items", "center"
+  );
+  const full_width = map("width", "100%");
+  const text_center = map("text-align", "center");
+
+}
