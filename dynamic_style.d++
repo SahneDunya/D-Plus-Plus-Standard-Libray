@@ -1,0 +1,73 @@
+// dynamic_style.d++ - D++ Standard Library: Runtime CSS Styling
+
+namespace std::dynamic_style {
+
+  struct StyleClass {
+    name: string;
+    declarations: map<string, string>;
+  }
+
+  struct DynamicStylesheet {
+    classes: map<string, StyleClass>;
+  }
+
+  // Yeni boş stil sayfası oluştur
+  func create_stylesheet() -> DynamicStylesheet {
+    return DynamicStylesheet(map());
+  }
+
+  // Yeni stil sınıfı oluştur
+  func create_class(name: string) -> StyleClass {
+    return StyleClass(name, map());
+  }
+
+  // Sınıfa özellik ekle
+  func set_property(cls: StyleClass, property: string, value: string) -> StyleClass {
+    cls.declarations[property] = value;
+    return cls;
+  }
+
+  // Sınıfı stil dosyasına ekle
+  func add_class(sheet: DynamicStylesheet, cls: StyleClass) -> DynamicStylesheet {
+    sheet.classes[cls.name] = cls;
+    return sheet;
+  }
+
+  // Sınıfın string çıktısı
+  func render_class(cls: StyleClass) -> string {
+    css := "." + cls.name + " {\n";
+    for ((k, v) in cls.declarations) {
+      css += "  " + k + ": " + v + ";\n";
+    }
+    css += "}\n";
+    return css;
+  }
+
+  // Tüm stilleri CSS formatında çıktıya dönüştür
+  func render(sheet: DynamicStylesheet) -> string {
+    css := "";
+    for ((_, cls) in sheet.classes) {
+      css += render_class(cls) + "\n";
+    }
+    return css;
+  }
+
+  // Runtime'da DOM'a style etiketi olarak ekle (JS interop ile)
+  extern func inject_to_dom(css: string);
+
+  // Tüm stylesheet'i DOM'a inject et
+  func apply(sheet: DynamicStylesheet) {
+    css := render(sheet);
+    inject_to_dom(css);
+  }
+
+  // Stil sınıfına inline stil döndür
+  func to_inline(cls: StyleClass) -> string {
+    out := "";
+    for ((k, v) in cls.declarations) {
+      out += k + ": " + v + "; ";
+    }
+    return out.trim();
+  }
+
+}
