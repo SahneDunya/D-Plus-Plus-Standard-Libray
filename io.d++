@@ -1,101 +1,27 @@
-// std/io.d++
+// io.d++ - D++ Standard Library - IO Module
 
-// Need Result from core
-pub use core::Result;
-pub use core::String; // Need String for error descriptions, etc.
-pub use core::Error as CoreErrorTrait; // Alias to avoid name collision
+module io;
 
-// IO specific Error types
-// A common approach is an enum covering various IO errors
-pub enum Error {
-    NotFound,           // File or path not found
-    PermissionDenied,   // Lack of permissions
-    ConnectionRefused,  // Network connection refused
-    ConnectionReset,    // Network connection reset
-    ConnectionAborted,  // Network connection aborted
-    NotConnected,       // Not connected to peer
-    AddrInUse,          // Address already in use
-    AddrNotAvailable,   // Address not available
-    BrokenPipe,         // Write on a broken pipe
-    AlreadyExists,      // Entity already exists
-    WouldBlock,         // Operation would block (non-blocking I/O)
-    InvalidInput,       // Invalid data or arguments
-    InvalidData,        // Invalid data encountered (e.g., malformed UTF-8)
-    TimedOut,           // Operation timed out
-    WriteZero,          // Write operation wrote 0 bytes
-    Interrupted,        // Operation was interrupted
-    Other(String),      // Other error kind with a description
-    UnexpectedEof,      // Unexpected end of file
-    // TODO: Add a source field for chaining errors
+// Prints a string to standard output
+fn print(msg: str) {
+    extern fn write_stdout(ptr: *u8, len: usize);
+    write_stdout(msg.ptr(), msg.len());
 }
 
-impl CoreErrorTrait for Error {
-    fn description(&self) -> String {
-        // Provide a string representation for each error variant
-        match self {
-            Error::NotFound => "entity not found".to_string(),
-            Error::PermissionDenied => "permission denied".to_string(),
-            // ... other variants
-            Error::Other(msg) => msg.clone(), // Clone the inner string
-            _ => "unknown I/O error".to_string(), // Default for unhandled variants
-        }
-    }
-    // TODO: Maybe override fmt for Debug/Display using the description
+// Prints a string to standard output, followed by a newline
+fn println(msg: str) {
+    print(msg);
+    print("\n");
 }
 
+// Reads a line from standard input (until newline), returns a `str`
+fn read_line() -> str {
+    extern fn read_stdin_line(buf: *u8, max_len: usize) -> usize;
 
-// Traits for I/O operations
-
-// Read: A source from which bytes can be read.
-pub trait Read {
-    // Pull some bytes from this source into the specified buffer, returning how many bytes were read.
-    fn read(&mut self, buf: &mut [u8]) -> Result<usize, Error>; // u8 and usize from core
-
-    // Read the exact number of bytes required to fill buf.
-     fn read_exact(&mut self, buf: &mut [u8]) -> Result<(), Error>; // Convenience
-
-    // Read all bytes until EOF in this source, appending them to buf.
-     fn read_to_end(&mut self, buf: &mut core::Vec<u8>) -> Result<usize, Error>; // Convenience
-
-    // Read all bytes until EOF in this source, placing them into a String.
-     fn read_to_string(&mut self, dst: &mut String) -> Result<usize, Error>; // Convenience
+    let mut buffer: [u8; 1024];
+    let len = read_stdin_line(buffer.ptr_mut(), 1024);
+    return str::from_utf8(buffer[0..len]);
 }
 
-// Write: A destination to which bytes can be written.
-pub trait Write {
-    // Write a buffer into this writer, returning how many bytes were written.
-    fn write(&mut self, buf: &[u8]) -> Result<usize, Error>;
-
-    // Flush the buffered data to the underlying writer.
-    fn flush(&mut self) -> Result<(), Error>;
-
-    // Write an entire buffer to this writer.
-     fn write_all(&mut self, buf: &[u8]) -> Result<(), Error>; // Convenience
-
-    // Write a formatted string to this writer.
-     fn write_fmt(&mut self, args: core::Arguments) -> Result<(), Error>; // Needs core::Arguments type
-}
-
-// Standard I/O Streams (console input/output)
-
-// Stdin: A handle to the standard input stream of a process.
-pub struct Stdin { /* internal handle */ }
-impl Read for Stdin { /* ... provide read implementation ... */ }
-
-// Stdout: A handle to the standard output stream of a process.
-pub struct Stdout { /* internal handle */ }
-impl Write for Stdout { /* ... provide write implementation ... */ }
-
-// Stderr: A handle to the standard error stream of a process.
-pub struct Stderr { /* internal handle */ }
-impl Write for Stderr { /* ... provide write implementation ... */ }
-
-
-// Functions to get the standard I/O handles
-pub fn stdin() -> Stdin;
-pub fn stdout() -> Stdout;
-pub fn stderr() -> Stderr;
-
-// Optional: Buffering
-// pub struct BufReader<R: Read> { /* ... */ } // Wraps a Read implementor with buffering
-// pub struct BufWriter<W: Write> { /* ... */ } // Wraps a Write implementor with buffering
+// TODO: Add file I/O (open, read, write, close)
+// TODO: Add formatted printing (e.g., println!("Hello {}", name))
