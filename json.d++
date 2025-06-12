@@ -1,0 +1,66 @@
+// json.d++ - D++ Standard Library: JSON Utilities
+
+namespace std::json {
+
+  type Json = null | bool | int | float | string | list<Json> | map<string, Json>;
+
+  // Parses a JSON-formatted string into a Json value
+  func parse(input: string) -> Json | error {
+    return platform::json_parse(input);
+  }
+
+  // Converts a Json value into a JSON-formatted string
+  func stringify(value: Json, pretty: bool = false) -> string {
+    return platform::json_stringify(value, pretty);
+  }
+
+  // Gets a value from a Json map with default fallback
+  func get(obj: Json, key: string, default: Json = null) -> Json {
+    if (obj is map<string, Json> && key in obj) {
+      return obj[key];
+    }
+    return default;
+  }
+
+  // Checks if a key exists in a Json map
+  func has(obj: Json, key: string) -> bool {
+    return obj is map<string, Json> && key in obj;
+  }
+
+  // Tries to convert Json value to string, else returns default
+  func as_string(value: Json, default: string = "") -> string {
+    return value is string ? value : default;
+  }
+
+  // Tries to convert Json value to int, else returns default
+  func as_int(value: Json, default: int = 0) -> int {
+    return value is int ? value : default;
+  }
+
+  // Tries to convert Json value to float, else returns default
+  func as_float(value: Json, default: float = 0.0) -> float {
+    return value is float ? value : default;
+  }
+
+  // Tries to convert Json value to bool, else returns default
+  func as_bool(value: Json, default: bool = false) -> bool {
+    return value is bool ? value : default;
+  }
+
+  // Tries to convert Json value to list, else returns default
+  func as_list(value: Json, default: list<Json> = []) -> list<Json> {
+    return value is list<Json> ? value : default;
+  }
+
+  // Tries to convert Json value to map, else returns default
+  func as_map(value: Json, default: map<string, Json> = {}) -> map<string, Json> {
+    return value is map<string, Json> ? value : default;
+  }
+
+  // Platform bindings (to be implemented per runtime/VM)
+  extern namespace platform {
+    func json_parse(input: string) -> Json | error;
+    func json_stringify(value: Json, pretty: bool) -> string;
+  }
+
+} // namespace std::json
