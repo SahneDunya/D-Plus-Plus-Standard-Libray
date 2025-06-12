@@ -1,75 +1,102 @@
-// std/fs.d++
+// fs.d++ - File System Standard Library for D++
 
-pub use core::Result;
-pub use core::String;
-pub use core::Error as CoreErrorTrait;
+module std.fs;
 
-// FS errors often use IO errors or have specific ones.
-// Re-export the IO Error enum as the primary error type for fs.
-pub use io::Error;
+import std.io;
 
-// File: Represents a file in the file system.
-// It implements the io::Read and io::Write traits.
-pub struct File {
-    // internal file handle/descriptor
-    // Needs to implement Drop trait from core for resource cleanup (closing file)
-    _handle: isize, // isize from core
+extern "C" {
+    fn open(path: str, mode: str) -> int;
+    fn close(fd: int) -> int;
+    fn read(fd: int, buffer: mut u8[], size: usize) -> isize;
+    fn write(fd: int, buffer: u8[], size: usize) -> isize;
+    fn remove(path: str) -> int;
+    fn rename(old: str, new: str) -> int;
+    fn mkdir(path: str, mode: int) -> int;
+    fn rmdir(path: str) -> int;
+    fn stat(path: str, out_size: mut usize) -> int;
 }
 
-// File Mode flags (for open function)
-pub enum OpenOptions {
-    // Configuration for how to open a file
-    // Can be built using methods like .read(true), .write(true), .create(true), .append(true) etc.
+// File open modes
+const READ = "r";
+const WRITE = "w";
+const APPEND = "a";
+const READWRITE = "r+";
+
+// Read entire file as string
+fn read_file(path: str) -> str {
+    let size: usize = 0;
+    if stat(path, &size) != 0 {
+        panic("Failed to stat file");
+    }
+
+    let fd = open(path, READ);
+    if fd < 0 {
+        panic("Failed to open file");
+    }
+
+    let buffer: mut u8[] = new u8[size];
+    let bytes_read = read(fd, buffer, size);
+    close(fd);
+
+    if bytes_read < 0 {
+        panic("Failed to read file");
+    }
+
+    return str(buffer[0..bytes_read]);
 }
 
-impl File {
-    // Opens a file in read-only mode.
-    pub fn open(path: &str) -> Result<File, Error>;
-
-    // Opens a file in write-only mode, creating it if it doesn't exist or truncating it if it does.
-    pub fn create(path: &str) -> Result<File, Error>;
-
-    // Opens a file with the specified options.
-     pub fn open_with_options(path: &str, options: OpenOptions) -> Result<File, Error>;
-
-    // Seek to a position within the file.
-     pub fn seek(&mut self, pos: SeekFrom) -> Result<u64, Error>; // Needs SeekFrom enum, u64 from core
-
-    // Get metadata about the file.
-     pub fn metadata(&self) -> Result<Metadata, Error>; // Needs Metadata struct
+// Write string to file
+fn write_file(path: str, content: str) -> void {
+    let fd = open(path, WRITE);
+    if fd < 0 {
+        panic("Failed to open file for writing");
+    }
+    let bytes = content.bytes();
+    let res = write(fd, bytes, bytes.len());
+    close(fd);
+    if res < 0 {
+        panic("Failed to write file");
+    }
 }
 
-// Implement Read and Write traits for File
-impl io::Read for File {
-    fn read(&mut self, buf: &mut [u8]) -> Result<usize, io::Error>;
-    // Implement other read methods...
+// Append string to file
+fn append_file(path: str, content: str) -> void {
+    let fd = open(path, APPEND);
+    if fd < 0 {
+        panic("Failed to open file for appending");
+    }
+    let bytes = content.bytes();
+    let res = write(fd, bytes, bytes.len());
+    close(fd);
+    if res < 0 {
+        panic("Failed to append to file");
+    }
 }
 
-impl io::Write for File {
-    fn write(&mut self, buf: &[u8]) -> Result<usize, io::Error>;
-    fn flush(&mut self) -> Result<(), io::Error>;
-    // Implement other write methods...
+// Remove a file
+fn delete_file(path: str) -> void {
+    if remove(path) != 0 {
+        panic("Failed to delete file");
+    }
 }
 
+// Rename file
+fn rename_file(old_path: str, new_path: str) -> void {
+    if rename(old_path, new_path) != 0 {
+        panic("Failed to rename file");
+    }
+}
 
-// File system operations (typically functions)
+// Create a directory
+fn make_dir(path: str, mode: int = 0o755) -> void {
+    if mkdir(path, mode) != 0 {
+        panic("Failed to create directory");
+    }
+}
 
-// Removes a file from the file system.
-pub fn remove_file(path: &str) -> Result<(), Error>;
-
-// Creates a new directory.
-pub fn create_dir(path: &str) -> Result<(), Error>;
-
-// Removes an empty directory.
-pub fn remove_dir(path: &str) -> Result<(), Error>;
-
-// Reads the entire contents of a file into a string.
-pub fn read_to_string(path: &str) -> Result<String, Error>; // Convenience function
-
-// Writes a string to a file, overwriting any existing content.
-pub fn write(path: &str, contents: &str) -> Result<(), Error>; // Convenience function
-
-// TODO: Add directory operations (read_dir, create_dir_all), symlinks, permissions, etc.
-// TODO: Path manipulation structs (Path, PathBuf) - like Rust
-// pub struct Path { /* borrowed path slice */ }
-// pub struct PathBuf { /* owned, mutable path */ }
+// Remove a directory
+fn remove_dir(path: str) -> void {
+    if rmdir(path) != 0 {
+        panic("Failed to remove directory");
+    }
+}
