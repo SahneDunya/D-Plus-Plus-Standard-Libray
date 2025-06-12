@@ -1,0 +1,73 @@
+// random.d++ - D++ Standard Library: Random Module
+
+module std.random;
+
+import std.time;
+
+class Random {
+    private u64 seed;
+
+    // Linear Congruential Generator parameters (example values)
+    private const u64 a = 6364136223846793005;
+    private const u64 c = 1;
+    private const u64 m = 1UL << 63;
+
+    this() {
+        seed = Time.now().toUnixTime();
+    }
+
+    this(u64 s) {
+        seed = s;
+    }
+
+    // Generates the next random u64 value
+    private u64 next() {
+        seed = (a * seed + c) % m;
+        return seed;
+    }
+
+    // Returns a random integer in [0, max)
+    u64 randint(u64 max) {
+        return next() % max;
+    }
+
+    // Returns a random integer in [min, max)
+    u64 randint(u64 min, u64 max) {
+        return min + (next() % (max - min));
+    }
+
+    // Returns a random float in [0.0, 1.0)
+    f64 random() {
+        return cast(f64)(next()) / m;
+    }
+
+    // Returns true with probability p (0.0 <= p <= 1.0)
+    bool chance(f64 p) {
+        return random() < p;
+    }
+
+    // Shuffles an array in place using Fisher–Yates algorithm
+    void shuffle<T>(T[] arr) {
+        for (i64 i = arr.length - 1; i > 0; --i) {
+            u64 j = randint(i + 1);
+            T temp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = temp;
+        }
+    }
+
+    // Chooses a random element from an array
+    T choice<T>(T[] arr) {
+        return arr[randint(arr.length)];
+    }
+
+    // Returns a new array with k random elements from arr (no replacement)
+    T[] sample<T>(T[] arr, usize k) {
+        T[] copy = arr.dup;
+        shuffle(copy);
+        return copy[0 .. k];
+    }
+}
+
+// Global default RNG instance
+Random default_rng = new Random();
