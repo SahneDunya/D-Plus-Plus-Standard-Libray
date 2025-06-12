@@ -1,0 +1,152 @@
+// linalg.d++ - Lineer Cebir Modülü
+
+module linalg;
+
+import math;
+
+// Vektör
+class Vector {
+    private data: float[];
+
+    fn init(values: float[]) {
+        this.data = values;
+    }
+
+    fn size(): int {
+        return this.data.len();
+    }
+
+    fn get(index: int): float {
+        return this.data[index];
+    }
+
+    fn set(index: int, value: float) {
+        this.data[index] = value;
+    }
+
+    fn add(other: Vector): Vector {
+        assert this.size() == other.size();
+        result := Vector(this.size());
+        for i in 0..this.size() {
+            result.set(i, this.get(i) + other.get(i));
+        }
+        return result;
+    }
+
+    fn sub(other: Vector): Vector {
+        assert this.size() == other.size();
+        result := Vector(this.size());
+        for i in 0..this.size() {
+            result.set(i, this.get(i) - other.get(i));
+        }
+        return result;
+    }
+
+    fn dot(other: Vector): float {
+        assert this.size() == other.size();
+        sum := 0.0;
+        for i in 0..this.size() {
+            sum += this.get(i) * other.get(i);
+        }
+        return sum;
+    }
+
+    fn norm(): float {
+        return math.sqrt(this.dot(this));
+    }
+
+    fn scale(scalar: float): Vector {
+        result := Vector(this.size());
+        for i in 0..this.size() {
+            result.set(i, this.get(i) * scalar);
+        }
+        return result;
+    }
+
+    fn to_array(): float[] {
+        return this.data;
+    }
+}
+
+// Matris
+class Matrix {
+    private rows: int;
+    private cols: int;
+    private data: float[][];
+
+    fn init(rows: int, cols: int, values: float[][]) {
+        assert values.len() == rows;
+        assert values[0].len() == cols;
+        this.rows = rows;
+        this.cols = cols;
+        this.data = values;
+    }
+
+    fn get(i: int, j: int): float {
+        return this.data[i][j];
+    }
+
+    fn set(i: int, j: int, value: float) {
+        this.data[i][j] = value;
+    }
+
+    fn transpose(): Matrix {
+        result := Matrix(this.cols, this.rows, []);
+        for i in 0..this.cols {
+            row := [];
+            for j in 0..this.rows {
+                row.append(this.data[j][i]);
+            }
+            result.data.append(row);
+        }
+        return result;
+    }
+
+    fn multiply(other: Matrix): Matrix {
+        assert this.cols == other.rows;
+        result := Matrix(this.rows, other.cols, []);
+        for i in 0..this.rows {
+            row := [];
+            for j in 0..other.cols {
+                sum := 0.0;
+                for k in 0..this.cols {
+                    sum += this.data[i][k] * other.data[k][j];
+                }
+                row.append(sum);
+            }
+            result.data.append(row);
+        }
+        return result;
+    }
+
+    fn determinant(): float {
+        assert this.rows == this.cols;
+        if this.rows == 2 {
+            return this.data[0][0] * this.data[1][1] - this.data[0][1] * this.data[1][0];
+        }
+        det := 0.0;
+        for p in 0..this.cols {
+            sub := this.submatrix(0, p);
+            det += ((-1.0) ** p) * this.data[0][p] * sub.determinant();
+        }
+        return det;
+    }
+
+    fn submatrix(row_to_remove: int, col_to_remove: int): Matrix {
+        new_data := [];
+        for i in 0..this.rows {
+            if i == row_to_remove continue;
+            row := [];
+            for j in 0..this.cols {
+                if j == col_to_remove continue;
+                row.append(this.data[i][j]);
+            }
+            new_data.append(row);
+        }
+        return Matrix(this.rows - 1, this.cols - 1, new_data);
+    }
+
+    fn to_array(): float[][] {
+        return this.data;
+    }
+}
