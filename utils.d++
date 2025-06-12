@@ -1,0 +1,125 @@
+// utils.d++ - D++ Standard Library: Utility Helpers
+
+namespace std::utils {
+
+  // ---------------------------
+  // Type Utilities
+  // ---------------------------
+  func is_null<T>(value: T?) -> bool {
+    return value == null;
+  }
+
+  func is_some<T>(value: T?) -> bool {
+    return value != null;
+  }
+
+  func type_of<T>(value: T) -> string {
+    return __typeinfo(value); // derleyici içi özel fonksiyon
+  }
+
+  // ---------------------------
+  // String Utilities
+  // ---------------------------
+  func is_blank(text: string) -> bool {
+    return text.trim() == "";
+  }
+
+  func repeat(s: string, n: int) -> string {
+    out := "";
+    for (i in 0..n) out += s;
+    return out;
+  }
+
+  func truncate(s: string, length: int, ellipsis: bool = true) -> string {
+    if (s.len <= length) return s;
+    return s.slice(0, length) + (ellipsis ? "..." : "");
+  }
+
+  // ---------------------------
+  // Math Utilities
+  // ---------------------------
+  func clamp(x: float, min: float, max: float) -> float {
+    return x < min ? min : (x > max ? max : x);
+  }
+
+  func between(x: float, a: float, b: float) -> bool {
+    return x >= a && x <= b;
+  }
+
+  func lerp(a: float, b: float, t: float) -> float {
+    return a + (b - a) * t;
+  }
+
+  // ---------------------------
+  // Array & List Utilities
+  // ---------------------------
+  func unique<T>(arr: list<T>) -> list<T> {
+    seen := set<T>();
+    result := list<T>();
+    for (item in arr) {
+      if (!seen.contains(item)) {
+        seen.add(item);
+        result.push(item);
+      }
+    }
+    return result;
+  }
+
+  func chunk<T>(arr: list<T>, size: int) -> list<list<T>> {
+    chunks := list<list<T>>();
+    for (i in 0..arr.len step size) {
+      chunks.push(arr.slice(i, i + size));
+    }
+    return chunks;
+  }
+
+  func flatten<T>(arr: list<list<T>>) -> list<T> {
+    flat := list<T>();
+    for (sub in arr) {
+      flat.extend(sub);
+    }
+    return flat;
+  }
+
+  // ---------------------------
+  // Timing Utilities
+  // ---------------------------
+  func sleep(ms: int) {
+    platform::sleep_ms(ms);
+  }
+
+  extern namespace platform {
+    func sleep_ms(ms: int);
+  }
+
+  // ---------------------------
+  // Debug & Logging
+  // ---------------------------
+  func debug_dump<T>(label: string, val: T) {
+    print("[DEBUG] " + label + ": " + val.to_string());
+  }
+
+  func assert(cond: bool, message: string = "Assertion failed!") {
+    if (!cond) throw Error(message);
+  }
+
+  // ---------------------------
+  // Random Helpers (shortcut)
+  // ---------------------------
+  use std::random;
+
+  func random_element<T>(arr: list<T>) -> T? {
+    if (arr.len == 0) return null;
+    return arr[random::int_range(0, arr.len - 1)];
+  }
+
+  func shuffle<T>(arr: list<T>) -> list<T> {
+    copy := arr.clone();
+    for (i in 0..copy.len) {
+      j := random::int_range(i, copy.len - 1);
+      swap(copy[i], copy[j]);
+    }
+    return copy;
+  }
+
+}
