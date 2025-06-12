@@ -1,0 +1,58 @@
+// process.d++ - D++ Standard Library: Process Management
+
+namespace std::process {
+
+  struct Process {
+    pid: int;
+    stdin: Stream;
+    stdout: Stream;
+    stderr: Stream;
+  }
+
+  // Executes a process and returns a Process handle
+  func spawn(command: string, args: list<string> = [], env: map<string, string>? = null, cwd: string? = null) -> Process | null {
+    return platform::spawn_process(command, args, env, cwd);
+  }
+
+  // Executes a command and waits for it to finish, returning the exit code
+  func run(command: string, args: list<string> = [], env: map<string, string>? = null, cwd: string? = null) -> int {
+    return platform::run_process(command, args, env, cwd);
+  }
+
+  // Kills a running process
+  func kill(proc: Process) -> bool {
+    return platform::kill_process(proc.pid);
+  }
+
+  // Waits for a process to exit and returns the exit code
+  func wait(proc: Process) -> int {
+    return platform::wait_process(proc.pid);
+  }
+
+  // Checks if the process is still running
+  func is_running(proc: Process) -> bool {
+    return platform::process_is_running(proc.pid);
+  }
+
+  // Gets the process ID of the current process
+  func current_pid() -> int {
+    return platform::current_pid();
+  }
+
+  // Gets the parent process ID
+  func parent_pid() -> int {
+    return platform::parent_pid();
+  }
+
+  // Platform-specific bindings (to be implemented per OS)
+  extern namespace platform {
+    func spawn_process(command: string, args: list<string>, env: map<string, string>?, cwd: string?) -> Process | null;
+    func run_process(command: string, args: list<string>, env: map<string, string>?, cwd: string?) -> int;
+    func kill_process(pid: int) -> bool;
+    func wait_process(pid: int) -> int;
+    func process_is_running(pid: int) -> bool;
+    func current_pid() -> int;
+    func parent_pid() -> int;
+  }
+
+} // namespace std::process
