@@ -1,0 +1,59 @@
+// regex.d++ - D++ Standard Library: Regular Expressions
+
+namespace std::regex {
+
+  struct Regex {
+    pattern: string;
+    flags: string;
+    internal: native_regex; // Opaque native compiled regex
+  }
+
+  // Compiles a regex pattern with optional flags (e.g., "i" for case-insensitive)
+  func compile(pattern: string, flags: string = "") -> Regex {
+    return platform::regex_compile(pattern, flags);
+  }
+
+  // Tests if the regex matches the input string
+  func matches(re: Regex, input: string) -> bool {
+    return platform::regex_match(re.internal, input);
+  }
+
+  // Finds all matches in the input string
+  func find_all(re: Regex, input: string) -> list<string> {
+    return platform::regex_find_all(re.internal, input);
+  }
+
+  // Returns the first match, or null if not found
+  func find_first(re: Regex, input: string) -> string | null {
+    return platform::regex_find_first(re.internal, input);
+  }
+
+  // Replaces all matches with the replacement string
+  func replace_all(re: Regex, input: string, replacement: string) -> string {
+    return platform::regex_replace_all(re.internal, input, replacement);
+  }
+
+  // Splits input based on regex matches
+  func split(re: Regex, input: string) -> list<string> {
+    return platform::regex_split(re.internal, input);
+  }
+
+  // Escapes special regex characters in a string
+  func escape(text: string) -> string {
+    return platform::regex_escape(text);
+  }
+
+  // Platform-specific implementation
+  extern namespace platform {
+    type native_regex;
+    
+    func regex_compile(pattern: string, flags: string) -> Regex;
+    func regex_match(native: native_regex, input: string) -> bool;
+    func regex_find_all(native: native_regex, input: string) -> list<string>;
+    func regex_find_first(native: native_regex, input: string) -> string | null;
+    func regex_replace_all(native: native_regex, input: string, replacement: string) -> string;
+    func regex_split(native: native_regex, input: string) -> list<string>;
+    func regex_escape(text: string) -> string;
+  }
+
+} // namespace std::regex
