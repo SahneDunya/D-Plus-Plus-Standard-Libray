@@ -1,0 +1,71 @@
+// term.d++ - D++ Standard Library: Terminal Utilities
+
+namespace std::term {
+
+  enum Color {
+    Default, Black, Red, Green, Yellow, Blue, Magenta, Cyan, White,
+    BrightBlack, BrightRed, BrightGreen, BrightYellow, BrightBlue, BrightMagenta, BrightCyan, BrightWhite
+  }
+
+  enum Style {
+    Reset, Bold, Dim, Italic, Underline, Blink, Invert, Hidden, Strikethrough
+  }
+
+  // Applies color to the foreground
+  func fg(color: Color) -> string {
+    return platform::set_fg_color(color);
+  }
+
+  // Applies color to the background
+  func bg(color: Color) -> string {
+    return platform::set_bg_color(color);
+  }
+
+  // Applies a style (e.g. bold, underline)
+  func style(s: Style) -> string {
+    return platform::set_style(s);
+  }
+
+  // Resets formatting
+  func reset() -> string {
+    return "\x1b[0m";
+  }
+
+  // Clears the terminal screen
+  func clear_screen() {
+    platform::clear_screen();
+  }
+
+  // Moves cursor to position (1-based indexing)
+  func move_cursor(row: int, col: int) {
+    platform::move_cursor(row, col);
+  }
+
+  // Hides the cursor
+  func hide_cursor() {
+    platform::hide_cursor();
+  }
+
+  // Shows the cursor
+  func show_cursor() {
+    platform::show_cursor();
+  }
+
+  // Gets terminal size (rows, cols)
+  func size() -> (int, int) {
+    return platform::terminal_size();
+  }
+
+  // Platform-specific interface
+  extern namespace platform {
+    func set_fg_color(color: Color) -> string;
+    func set_bg_color(color: Color) -> string;
+    func set_style(s: Style) -> string;
+    func clear_screen();
+    func move_cursor(row: int, col: int);
+    func hide_cursor();
+    func show_cursor();
+    func terminal_size() -> (int, int);
+  }
+
+} // namespace std::term
