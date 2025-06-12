@@ -1,0 +1,60 @@
+// log.d++ - D++ Standard Library: Logging Utilities
+
+namespace std::log {
+
+  enum Level {
+    TRACE,
+    DEBUG,
+    INFO,
+    WARN,
+    ERROR,
+    FATAL
+  }
+
+  var current_level: Level = INFO;
+  var log_to_file: bool = false;
+  var log_file_path: string = "log.txt";
+
+  func set_level(level: Level) {
+    current_level = level;
+  }
+
+  func enable_file_logging(path: string) {
+    log_to_file = true;
+    log_file_path = path;
+  }
+
+  func disable_file_logging() {
+    log_to_file = false;
+  }
+
+  func log(level: Level, message: string) {
+    if (level < current_level) return;
+    let prefix = level_to_string(level);
+    let line = "[" + prefix + "] " + time::now().to_string() + " - " + message;
+
+    io::println(line);
+    if (log_to_file) {
+      fs::append(log_file_path, line + "\n");
+    }
+  }
+
+  func trace(msg: string) { log(TRACE, msg); }
+  func debug(msg: string) { log(DEBUG, msg); }
+  func info(msg: string) { log(INFO, msg); }
+  func warn(msg: string) { log(WARN, msg); }
+  func error(msg: string) { log(ERROR, msg); }
+  func fatal(msg: string) { log(FATAL, msg); }
+
+  func level_to_string(level: Level) -> string {
+    match (level) {
+      TRACE => "TRACE",
+      DEBUG => "DEBUG",
+      INFO => "INFO",
+      WARN => "WARN",
+      ERROR => "ERROR",
+      FATAL => "FATAL"
+    }
+  }
+
+} // namespace std::log
