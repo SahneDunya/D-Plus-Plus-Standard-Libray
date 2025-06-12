@@ -1,0 +1,103 @@
+// string.d++ - D++ Standard Library: String Utilities
+
+module std.string;
+
+// Import required modules
+import std.collections;
+
+// Trim whitespace from both ends of a string
+fn trim(str: String): String {
+    let start = str.find_first_not_of(" \t\n\r");
+    let end = str.find_last_not_of(" \t\n\r");
+    if (start == -1 || end == -1) return "";
+    return str.slice(start, end + 1);
+}
+
+// Split string by a delimiter
+fn split(str: String, delimiter: Char): Vector<String> {
+    let parts = Vector<String>();
+    let current = "";
+    for (let c in str) {
+        if (c == delimiter) {
+            parts.push(current);
+            current = "";
+        } else {
+            current += c;
+        }
+    }
+    parts.push(current);
+    return parts;
+}
+
+// Join vector of strings with a delimiter
+fn join(parts: Vector<String>, delimiter: String): String {
+    if (parts.is_empty()) return "";
+    let result = parts[0];
+    for (let i = 1; i < parts.size(); i++) {
+        result += delimiter + parts[i];
+    }
+    return result;
+}
+
+// Replace all occurrences of a substring
+fn replace(str: String, from: String, to: String): String {
+    let result = "";
+    let i = 0;
+    while (i < str.length()) {
+        if (str.substr(i, from.length()) == from) {
+            result += to;
+            i += from.length();
+        } else {
+            result += str[i];
+            i++;
+        }
+    }
+    return result;
+}
+
+// Convert string to lowercase
+fn to_lower(str: String): String {
+    let result = "";
+    for (let c in str) {
+        if (c >= 'A' && c <= 'Z') {
+            result += (c + 32) as Char;
+        } else {
+            result += c;
+        }
+    }
+    return result;
+}
+
+// Convert string to uppercase
+fn to_upper(str: String): String {
+    let result = "";
+    for (let c in str) {
+        if (c >= 'a' && c <= 'z') {
+            result += (c - 32) as Char;
+        } else {
+            result += c;
+        }
+    }
+    return result;
+}
+
+// Check if string starts with a prefix
+fn starts_with(str: String, prefix: String): Bool {
+    if (prefix.length() > str.length()) return false;
+    return str.substr(0, prefix.length()) == prefix;
+}
+
+// Check if string ends with a suffix
+fn ends_with(str: String, suffix: String): Bool {
+    if (suffix.length() > str.length()) return false;
+    return str.substr(str.length() - suffix.length()) == suffix;
+}
+
+// Reverse a string
+fn reverse(str: String): String {
+    let result = "";
+    for (let i = str.length() - 1; i >= 0; i--) {
+        result += str[i];
+    }
+    return result;
+}
