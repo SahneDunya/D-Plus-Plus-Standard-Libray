@@ -1,0 +1,85 @@
+// memory_dynamic.d++ - D++ Standard Library: Dynamic Memory Allocation
+
+namespace std::memory_dynamic {
+
+  // Bellek ayırma
+  extern func malloc(size: usize) -> ptr<u8>;
+  extern func calloc(count: usize, size: usize) -> ptr<u8>;
+  extern func realloc(ptr: ptr<u8>, new_size: usize) -> ptr<u8>;
+  extern func free(ptr: ptr<u8>);
+
+  // Tür güvenli tahsisat
+  func alloc<T>(count: usize = 1) -> ptr<T> {
+    return cast(ptr<T>) malloc(count * sizeof(T));
+  }
+
+  func zero_alloc<T>(count: usize = 1) -> ptr<T> {
+    return cast(ptr<T>) calloc(count, sizeof(T));
+  }
+
+  func resize<T>(ptr: ptr<T>, new_count: usize) -> ptr<T> {
+    return cast(ptr<T>) realloc(cast(ptr<u8>) ptr, new_count * sizeof(T));
+  }
+
+  // Belleği serbest bırak
+  func dealloc<T>(ptr: ptr<T>) {
+    free(cast(ptr<u8>) ptr);
+  }
+
+  // Akıllı işaretçi (RAII tarzı dinamik bellek yönetimi)
+  struct UniquePtr<T> {
+    inner: ptr<T>;
+
+    func new(count: usize = 1) -> Self {
+      return Self { inner: alloc<T>(count) };
+    }
+
+    func free(self: ref Self) {
+      if self.inner != null {
+        dealloc(self.inner);
+        self.inner = null;
+      }
+    }
+
+    func ptr(self: ref Self) -> ptr<T> {
+      return self.inner;
+    }
+
+    // Destructor çağrısı
+    drop(self: ref Self) {
+      self.free();
+    }
+  }
+
+  // Dinamik dizi oluşturucu
+  func make_array<T>(count: usize, init: T? = null) -> ptr<T> {
+    let ptr = alloc<T>(count);
+    if init != null {
+      for i in 0..count {
+        ptr[i] = init;
+      }
+    }
+    return ptr;
+  }
+
+  // Bellek kopyalama
+  extern func memcpy(dest: ptr<u8>, src: ptr<u8>, size: usize);
+  extern func memset(dest: ptr<u8>, value: u8, size: usize);
+  extern func memcmp(ptr1: ptr<u8>, ptr2: ptr<u8>, size: usize) -> int;
+
+  // Tür güvenli yardımcılar
+  func copy<T>(dest: ptr<T>, src: ptr<T>, count: usize) {
+    memcpy(cast(ptr<u8>) dest, cast(ptr<u8>) src, count * sizeof(T));
+  }
+
+  func fill<T>(dest: ptr<T>, value: T, count: usize) {
+    for i in 0..count {
+      dest[i] = value;
+    }
+  }
+
+  func compare<T>(a: ptr<T>, b: ptr<T>, count: usize) -> int {
+    return memcmp(cast(ptr<u8>) a, cast(ptr<u8>) b, count * sizeof(T));
+  }
+
+}
