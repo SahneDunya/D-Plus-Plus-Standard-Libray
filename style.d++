@@ -1,0 +1,94 @@
+// style.d++ - D++ Standard Library: HTML Style Utilities
+
+namespace std::style {
+
+  struct StyleRule {
+    selector: string;
+    declarations: map<string, string>;
+    nested: list<StyleRule>;
+  }
+
+  struct Stylesheet {
+    rules: list<StyleRule>;
+    global_vars: map<string, string>;
+  }
+
+  // Yeni stil sayfası oluştur
+  func create_stylesheet() -> Stylesheet {
+    return Stylesheet([], map());
+  }
+
+  // Stil tanımı oluştur
+  func create_rule(selector: string) -> StyleRule {
+    return StyleRule(selector, map(), []);
+  }
+
+  // Stil tanımına özellik ekle
+  func add_declaration(rule: StyleRule, property: string, value: string) -> StyleRule {
+    rule.declarations[property] = value;
+    return rule;
+  }
+
+  // Nested rule (örnek: &:hover)
+  func add_nested_rule(parent: StyleRule, child: StyleRule) -> StyleRule {
+    parent.nested.append(child);
+    return parent;
+  }
+
+  // Stylesheet'e rule ekle
+  func add_rule(sheet: Stylesheet, rule: StyleRule) -> Stylesheet {
+    sheet.rules.append(rule);
+    return sheet;
+  }
+
+  // Global değişken tanımla (SCSS uyumlu)
+  func define_variable(sheet: Stylesheet, name: string, value: string) -> Stylesheet {
+    sheet.global_vars[name] = value;
+    return sheet;
+  }
+
+  // Stil çıktısını oluştur
+  func render_rule(rule: StyleRule, indent: string = "") -> string {
+    css := indent + rule.selector + " {\n";
+    for ((prop, val) in rule.declarations) {
+      css += indent + "  " + prop + ": " + val + ";\n";
+    }
+    css += indent + "}\n";
+    for (nested in rule.nested) {
+      css += render_rule(nested, indent + "  ");
+    }
+    return css;
+  }
+
+  func render(sheet: Stylesheet) -> string {
+    css := "";
+    for ((var_name, var_value) in sheet.global_vars) {
+      css += "$" + var_name + ": " + var_value + ";\n";
+    }
+    css += "\n";
+    for (rule in sheet.rules) {
+      css += render_rule(rule) + "\n";
+    }
+    return css;
+  }
+
+  // Inline CSS üret (html::Element uyumlu)
+  func inline_style(declarations: map<string, string>) -> string {
+    style_str := "";
+    for ((prop, val) in declarations) {
+      style_str += prop + ": " + val + "; ";
+    }
+    return style_str.trim();
+  }
+
+  // SCSS'ten türeyen stili inline'a dönüştür
+  func flatten_inline(rule: StyleRule) -> map<string, string> {
+    return rule.declarations;
+  }
+
+  // SCSS'ten CSS'e compile işlemi (basitleştirilmiş)
+  func compile(sheet: Stylesheet) -> string {
+    return render(sheet);
+  }
+
+}
