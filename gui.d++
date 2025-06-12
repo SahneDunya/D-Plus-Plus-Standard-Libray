@@ -1,0 +1,91 @@
+// gui.d++ - D++ Standard Library: Graphical User Interface
+
+namespace std::gui {
+
+  enum WindowStyle {
+    Default,
+    Borderless,
+    Resizable,
+    Fullscreen
+  }
+
+  struct Color {
+    r: u8;
+    g: u8;
+    b: u8;
+    a: u8 = 255;
+  }
+
+  struct Point {
+    x: int;
+    y: int;
+  }
+
+  struct Size {
+    width: int;
+    height: int;
+  }
+
+  struct Window {
+    id: int;
+    title: string;
+    size: Size;
+    position: Point;
+    style: WindowStyle;
+  }
+
+  func create_window(title: string, size: Size, position: Point = {x:100, y:100}, style: WindowStyle = WindowStyle::Default) -> Window {
+    return platform::create_window(title, size, position, style);
+  }
+
+  func close_window(win: Window) {
+    platform::close_window(win.id);
+  }
+
+  func set_title(win: Window, title: string) {
+    platform::set_window_title(win.id, title);
+  }
+
+  func draw_rect(win: Window, top_left: Point, size: Size, color: Color) {
+    platform::draw_rectangle(win.id, top_left, size, color);
+  }
+
+  func draw_text(win: Window, position: Point, text: string, color: Color) {
+    platform::draw_text(win.id, position, text, color);
+  }
+
+  func show(win: Window) {
+    platform::show_window(win.id);
+  }
+
+  func poll_events() -> list<Event> {
+    return platform::poll_events();
+  }
+
+  enum EventType {
+    WindowClose,
+    KeyDown,
+    KeyUp,
+    MouseMove,
+    MouseClick
+  }
+
+  struct Event {
+    type: EventType;
+    window_id: int;
+    key_code: int?;
+    mouse_pos: Point?;
+  }
+
+  // Platform abstraction
+  extern namespace platform {
+    func create_window(title: string, size: Size, position: Point, style: WindowStyle) -> Window;
+    func close_window(id: int);
+    func set_window_title(id: int, title: string);
+    func draw_rectangle(id: int, top_left: Point, size: Size, color: Color);
+    func draw_text(id: int, position: Point, text: string, color: Color);
+    func show_window(id: int);
+    func poll_events() -> list<Event>;
+  }
+
+} // namespace std::gui
