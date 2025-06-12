@@ -1,0 +1,86 @@
+// csv.d++ - D++ Standard Library: CSV Parsing and Writing
+
+namespace std::csv {
+
+  // Represents a row in a CSV file
+  type Row = list<string>;
+
+  // Represents a CSV table
+  type Table = list<Row>;
+
+  // Parses a CSV string into a Table
+  func parse(data: string, delimiter: char = ',', quote: char = '"') -> Table {
+    let rows: Table = [];
+    var current_row: Row = [];
+    var current_field: string = "";
+    var in_quotes = false;
+    var i = 0;
+
+    while (i < data.length) {
+      let ch = data[i];
+      if (in_quotes) {
+        if (ch == quote) {
+          if (i + 1 < data.length && data[i + 1] == quote) {
+            current_field += quote;
+            i += 1;
+          } else {
+            in_quotes = false;
+          }
+        } else {
+          current_field += ch;
+        }
+      } else {
+        if (ch == quote) {
+          in_quotes = true;
+        } else if (ch == delimiter) {
+          current_row.append(current_field);
+          current_field = "";
+        } else if (ch == '\n') {
+          current_row.append(current_field);
+          rows.append(current_row);
+          current_row = [];
+          current_field = "";
+        } else if (ch != '\r') {
+          current_field += ch;
+        }
+      }
+      i += 1;
+    }
+    if (current_field != "" || current_row.length > 0) {
+      current_row.append(current_field);
+      rows.append(current_row);
+    }
+    return rows;
+  }
+
+  // Converts a Table into a CSV string
+  func stringify(table: Table, delimiter: char = ',', quote: char = '"') -> string {
+    let lines: list<string> = [];
+    for row in table {
+      let fields: list<string> = [];
+      for field in row {
+        if (field.contains(delimiter) || field.contains(quote) || field.contains('\n')) {
+          let escaped = field.replace(quote.str(), quote.str() + quote.str());
+          fields.append(quote.str() + escaped + quote.str());
+        } else {
+          fields.append(field);
+        }
+      }
+      lines.append(fields.join(delimiter.str()));
+    }
+    return lines.join("\n");
+  }
+
+  // Reads a CSV file from disk and returns a Table
+  func read_file(path: string, delimiter: char = ',', quote: char = '"') -> Table {
+    let content = std::fs::read_text(path);
+    return parse(content, delimiter, quote);
+  }
+
+  // Writes a Table to a CSV file
+  func write_file(path: string, table: Table, delimiter: char = ',', quote: char = '"') -> void {
+    let content = stringify(table, delimiter, quote);
+    std::fs::write_text(path, content);
+  }
+
+} // namespace std::csv
