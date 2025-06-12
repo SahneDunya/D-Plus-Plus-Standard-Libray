@@ -1,0 +1,101 @@
+// scss.d++ - D++ Standard Library: SCSS Utilities
+
+namespace std::scss {
+
+  struct Declaration {
+    property: string;
+    value: string;
+  }
+
+  struct Rule {
+    selector: string;
+    declarations: list<Declaration>;
+    nested: list<Rule>;
+  }
+
+  struct Stylesheet {
+    rules: list<Rule>;
+    variables: map<string, string>;
+    mixins: map<string, list<Declaration>>;
+  }
+
+  // Yeni stylesheet
+  func create_stylesheet() -> Stylesheet {
+    return Stylesheet([], map(), map());
+  }
+
+  // SCSS değişken tanımla
+  func set_variable(sheet: Stylesheet, name: string, value: string) -> Stylesheet {
+    sheet.variables[name] = value;
+    return sheet;
+  }
+
+  // SCSS değişken çağır
+  func get_variable(sheet: Stylesheet, name: string) -> string {
+    return sheet.variables.get(name, "");
+  }
+
+  // Yeni SCSS rule oluştur
+  func create_rule(selector: string) -> Rule {
+    return Rule(selector, [], []);
+  }
+
+  // Rule'a stil ekle
+  func add_declaration(rule: Rule, property: string, value: string) -> Rule {
+    rule.declarations.append(Declaration(property, value));
+    return rule;
+  }
+
+  // Rule içine nested rule ekle
+  func add_nested_rule(parent: Rule, child: Rule) -> Rule {
+    parent.nested.append(child);
+    return parent;
+  }
+
+  // Stylesheet'e rule ekle
+  func add_rule(sheet: Stylesheet, rule: Rule) -> Stylesheet {
+    sheet.rules.append(rule);
+    return sheet;
+  }
+
+  // Mixin tanımla
+  func define_mixin(sheet: Stylesheet, name: string, declarations: list<Declaration>) -> Stylesheet {
+    sheet.mixins[name] = declarations;
+    return sheet;
+  }
+
+  // Rule içine mixin uygula
+  func include_mixin(sheet: Stylesheet, rule: Rule, name: string) -> Rule {
+    mixin := sheet.mixins.get(name, []);
+    for (decl in mixin) {
+      rule = add_declaration(rule, decl.property, decl.value);
+    }
+    return rule;
+  }
+
+  // SCSS çıktısını üret
+  func render_rule(rule: Rule, indent: string = "") -> string {
+    output := indent + rule.selector + " {\n";
+    for (decl in rule.declarations) {
+      output += indent + "  " + decl.property + ": " + decl.value + ";\n";
+    }
+    output += indent + "}\n";
+    for (child in rule.nested) {
+      output += render_rule(child, indent + "  ");
+    }
+    return output;
+  }
+
+  func render(sheet: Stylesheet) -> string {
+    scss := "";
+    for ((name, value) in sheet.variables) {
+      scss += "$" + name + ": " + value + ";\n";
+    }
+    scss += "\n";
+    for (rule in sheet.rules) {
+      scss += render_rule(rule) + "\n";
+    }
+    return scss;
+  }
+
+}
