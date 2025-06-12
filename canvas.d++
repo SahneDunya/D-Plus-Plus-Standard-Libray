@@ -1,0 +1,130 @@
+// canvas.d++ - D++ Standard Library: 2D Canvas Drawing API
+
+namespace std::canvas {
+
+  enum ColorFormat {
+    RGB,
+    RGBA,
+    GRAYSCALE
+  }
+
+  struct Color {
+    r: int; // 0-255
+    g: int;
+    b: int;
+    a: int = 255;
+  }
+
+  struct Point {
+    x: float;
+    y: float;
+  }
+
+  struct Size {
+    width: float;
+    height: float;
+  }
+
+  struct Rect {
+    origin: Point;
+    size: Size;
+  }
+
+  struct Canvas {
+    width: int;
+    height: int;
+    format: ColorFormat;
+    buffer: bytes;
+  }
+
+  func create(width: int, height: int, format: ColorFormat = ColorFormat::RGBA) -> Canvas {
+    let buffer_size = width * height * match format {
+      RGB => 3,
+      RGBA => 4,
+      GRAYSCALE => 1
+    };
+    return Canvas(width, height, format, bytes(buffer_size));
+  }
+
+  func clear(canvas: Canvas, color: Color) {
+    for y in 0..canvas.height {
+      for x in 0..canvas.width {
+        set_pixel(canvas, x, y, color);
+      }
+    }
+  }
+
+  func set_pixel(canvas: Canvas, x: int, y: int, color: Color) {
+    if x < 0 || y < 0 || x >= canvas.width || y >= canvas.height {
+      return;
+    }
+    let index = (y * canvas.width + x) * match canvas.format {
+      RGB => 3,
+      RGBA => 4,
+      GRAYSCALE => 1
+    };
+    match canvas.format {
+      RGB => {
+        canvas.buffer[index] = byte(color.r);
+        canvas.buffer[index+1] = byte(color.g);
+        canvas.buffer[index+2] = byte(color.b);
+      },
+      RGBA => {
+        canvas.buffer[index] = byte(color.r);
+        canvas.buffer[index+1] = byte(color.g);
+        canvas.buffer[index+2] = byte(color.b);
+        canvas.buffer[index+3] = byte(color.a);
+      },
+      GRAYSCALE => {
+        let gray = byte((color.r + color.g + color.b) / 3);
+        canvas.buffer[index] = gray;
+      }
+    }
+  }
+
+  func draw_line(canvas: Canvas, from: Point, to: Point, color: Color) {
+    let dx = abs(to.x - from.x);
+    let dy = abs(to.y - from.y);
+    let sx = if from.x < to.x { 1 } else { -1 };
+    let sy = if from.y < to.y { 1 } else { -1 };
+    var err = dx - dy;
+
+    var x = int(from.x);
+    var y = int(from.y);
+    let ex = int(to.x);
+    let ey = int(to.y);
+
+    while x != ex || y != ey {
+      set_pixel(canvas, x, y, color);
+      let e2 = 2 * err;
+      if e2 > -dy {
+        err -= dy;
+        x += sx;
+      }
+      if e2 < dx {
+        err += dx;
+        y += sy;
+      }
+    }
+    set_pixel(canvas, ex, ey, color);
+  }
+
+  func draw_rect(canvas: Canvas, rect: Rect, color: Color, fill: bool = false) {
+    if fill {
+      for y in int(rect.origin.y)..int(rect.origin.y + rect.size.height) {
+        for x in int(rect.origin.x)..int(rect.origin.x + rect.size.width) {
+          set_pixel(canvas, x, y, color);
+        }
+      }
+    } else {
+      draw_line(canvas, rect.origin, Point(rect.origin.x + rect.size.width, rect.origin.y), color);
+      draw_line(canvas, rect.origin, Point(rect.origin.x, rect.origin.y + rect.size.height), color);
+      draw_line(canvas, Point(rect.origin.x + rect.size.width, rect.origin.y), Point(rect.origin.x + rect.size.width, rect.origin.y + rect.size.height), color);
+      draw_line(canvas, Point(rect.origin.x, rect.origin.y + rect.size.height), Point(rect.origin.x + rect.size.width, rect.origin.y + rect.size.height), color);
+    }
+  }
+
+  // Platform-specific image exporter stub
+  extern func export_to_file(canvas: Canvas, path: string, format: string = "png") -> bool;
+
+} // namespace std::canvas
