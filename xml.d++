@@ -1,0 +1,64 @@
+// xml.d++ - D++ Standard Library: XML Parsing and Serialization
+
+namespace std::xml {
+
+  struct XmlNode {
+    name: string;
+    attributes: map<string, string>;
+    children: list<XmlNode>;
+    text: string?;
+  }
+
+  // Parses XML string into a tree of XmlNode
+  func parse(xml_string: string) -> XmlNode | null {
+    return platform::parse_xml(xml_string);
+  }
+
+  // Serializes an XmlNode back into an XML string
+  func serialize(node: XmlNode, indent: bool = true) -> string {
+    return platform::serialize_xml(node, indent);
+  }
+
+  // Finds all nodes with a specific name
+  func find_all(node: XmlNode, name: string) -> list<XmlNode> {
+    let results: list<XmlNode> = [];
+    if node.name == name {
+      results.append(node);
+    }
+    for child in node.children {
+      results.extend(find_all(child, name));
+    }
+    return results;
+  }
+
+  // Finds the first node with a specific name
+  func find_first(node: XmlNode, name: string) -> XmlNode? {
+    if node.name == name {
+      return node;
+    }
+    for child in node.children {
+      let result = find_first(child, name);
+      if result != null {
+        return result;
+      }
+    }
+    return null;
+  }
+
+  // Updates or sets an attribute of an XML node
+  func set_attribute(node: XmlNode, key: string, value: string) {
+    node.attributes[key] = value;
+  }
+
+  // Removes an attribute from an XML node
+  func remove_attribute(node: XmlNode, key: string) {
+    node.attributes.erase(key);
+  }
+
+  // Platform-specific bindings for XML parsing
+  extern namespace platform {
+    func parse_xml(xml_string: string) -> XmlNode | null;
+    func serialize_xml(node: XmlNode, indent: bool) -> string;
+  }
+
+} // namespace std::xml
