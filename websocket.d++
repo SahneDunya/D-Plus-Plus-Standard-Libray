@@ -1,0 +1,54 @@
+// websocket.d++ - D++ Standard Library: WebSocket API
+
+namespace std::net::websocket {
+
+  enum WebSocketState {
+    CONNECTING,
+    OPEN,
+    CLOSING,
+    CLOSED
+  }
+
+  struct WebSocket {
+    state: WebSocketState;
+    url: string;
+    on_message: func(msg: string) -> void;
+    on_open: func() -> void;
+    on_close: func(code: int, reason: string) -> void;
+    on_error: func(err: string) -> void;
+  }
+
+  // Establish a WebSocket connection
+  func connect(url: string) -> WebSocket | null {
+    return platform::websocket_connect(url);
+  }
+
+  // Send a message over WebSocket
+  func send(ws: WebSocket, message: string) -> bool {
+    if ws.state != WebSocketState::OPEN {
+      return false;
+    }
+    return platform::websocket_send(ws, message);
+  }
+
+  // Close the WebSocket connection
+  func close(ws: WebSocket, code: int = 1000, reason: string = "") -> void {
+    if ws.state == WebSocketState::OPEN || ws.state == WebSocketState::CONNECTING {
+      ws.state = WebSocketState::CLOSING;
+      platform::websocket_close(ws, code, reason);
+    }
+  }
+
+  // Poll for new events (messages, errors, close, etc.)
+  func poll(ws: WebSocket) -> void {
+    platform::websocket_poll(ws);
+  }
+
+  extern namespace platform {
+    func websocket_connect(url: string) -> WebSocket | null;
+    func websocket_send(ws: WebSocket, message: string) -> bool;
+    func websocket_close(ws: WebSocket, code: int, reason: string) -> void;
+    func websocket_poll(ws: WebSocket) -> void;
+  }
+
+} // namespace std::net::websocket
