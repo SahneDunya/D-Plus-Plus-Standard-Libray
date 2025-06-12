@@ -1,85 +1,64 @@
-// memory_dynamic.d++ - D++ Standard Library: Dynamic Memory Allocation
+// memory_dynamic.d++ - D++ Standard Library: Dynamic Memory Utilities (Ownership Model)
 
-namespace std::memory_dynamic {
+namespace std::memory::dynamic {
 
-  // Bellek ayırma
-  extern func malloc(size: usize) -> ptr<u8>;
-  extern func calloc(count: usize, size: usize) -> ptr<u8>;
-  extern func realloc(ptr: ptr<u8>, new_size: usize) -> ptr<u8>;
-  extern func free(ptr: ptr<u8>);
-
-  // Tür güvenli tahsisat
-  func alloc<T>(count: usize = 1) -> ptr<T> {
-    return cast(ptr<T>) malloc(count * sizeof(T));
-  }
-
-  func zero_alloc<T>(count: usize = 1) -> ptr<T> {
-    return cast(ptr<T>) calloc(count, sizeof(T));
-  }
-
-  func resize<T>(ptr: ptr<T>, new_count: usize) -> ptr<T> {
-    return cast(ptr<T>) realloc(cast(ptr<u8>) ptr, new_count * sizeof(T));
-  }
-
-  // Belleği serbest bırak
-  func dealloc<T>(ptr: ptr<T>) {
-    free(cast(ptr<u8>) ptr);
-  }
-
-  // Akıllı işaretçi (RAII tarzı dinamik bellek yönetimi)
+  @no_copy
   struct UniquePtr<T> {
-    inner: ptr<T>;
+    ptr: *T;
+    owns: bool;
 
-    func new(count: usize = 1) -> Self {
-      return Self { inner: alloc<T>(count) };
+    init(value: T) {
+      this.ptr = alloc<T>();
+      *this.ptr = value;
+      this.owns = true;
     }
 
-    func free(self: ref Self) {
-      if self.inner != null {
-        dealloc(self.inner);
-        self.inner = null;
+    func move() -> UniquePtr<T> {
+      let new_ptr = UniquePtr<T>();
+      new_ptr.ptr = this.ptr;
+      new_ptr.owns = this.owns;
+      this.ptr = null;
+      this.owns = false;
+      return new_ptr;
+    }
+
+    func get() -> *T {
+      return this.ptr;
+    }
+
+    func borrow() -> &T {
+      assert(this.ptr != null);
+      return &*this.ptr;
+    }
+
+    func borrow_mut() -> &mut T {
+      assert(this.ptr != null);
+      return &mut *this.ptr;
+    }
+
+    drop() {
+      if (this.owns && this.ptr != null) {
+        free<T>(this.ptr);
       }
     }
-
-    func ptr(self: ref Self) -> ptr<T> {
-      return self.inner;
-    }
-
-    // Destructor çağrısı
-    drop(self: ref Self) {
-      self.free();
-    }
   }
 
-  // Dinamik dizi oluşturucu
-  func make_array<T>(count: usize, init: T? = null) -> ptr<T> {
-    let ptr = alloc<T>(count);
-    if init != null {
-      for i in 0..count {
-        ptr[i] = init;
-      }
-    }
-    return ptr;
+  func alloc<T>() -> *T {
+    return platform::malloc(size_of<T>()) as *T;
   }
 
-  // Bellek kopyalama
-  extern func memcpy(dest: ptr<u8>, src: ptr<u8>, size: usize);
-  extern func memset(dest: ptr<u8>, value: u8, size: usize);
-  extern func memcmp(ptr1: ptr<u8>, ptr2: ptr<u8>, size: usize) -> int;
-
-  // Tür güvenli yardımcılar
-  func copy<T>(dest: ptr<T>, src: ptr<T>, count: usize) {
-    memcpy(cast(ptr<u8>) dest, cast(ptr<u8>) src, count * sizeof(T));
+  func free<T>(ptr: *T) {
+    platform::free(ptr as *void);
   }
 
-  func fill<T>(dest: ptr<T>, value: T, count: usize) {
-    for i in 0..count {
-      dest[i] = value;
-    }
+  func realloc<T>(ptr: *T, new_size: usize) -> *T {
+    return platform::realloc(ptr as *void, new_size) as *T;
   }
 
-  func compare<T>(a: ptr<T>, b: ptr<T>, count: usize) -> int {
-    return memcmp(cast(ptr<u8>) a, cast(ptr<u8>) b, count * sizeof(T));
+  extern namespace platform {
+    func malloc(size: usize) -> *void;
+    func free(ptr: *void);
+    func realloc(ptr: *void, size: usize) -> *void;
   }
 
-}
+} // namespace std::memory::dynamic
