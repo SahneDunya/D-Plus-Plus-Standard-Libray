@@ -1,0 +1,77 @@
+// path.d++ - D++ Standard Library: Path utilities
+
+module std.path;
+
+import std.string;
+import std.fs;
+
+class Path {
+    // Normalize path (e.g. remove '.', '..', redundant slashes)
+    static string normalize(string path) {
+        auto parts = path.split("/").filter!(p => p != "" && p != ".").array;
+        auto stack = [];
+        foreach (part; parts) {
+            if (part == "..") {
+                if (!stack.empty) {
+                    stack.pop();
+                }
+            } else {
+                stack ~= part;
+            }
+        }
+        return "/" ~ stack.join("/");
+    }
+
+    // Join multiple path segments
+    static string join(string[] segments) {
+        return normalize(segments.join("/"));
+    }
+
+    // Get file name from path
+    static string basename(string path) {
+        if (path.endsWith("/")) path = path[0 .. $-1];
+        return path.split("/").back;
+    }
+
+    // Get directory name from path
+    static string dirname(string path) {
+        if (path.endsWith("/")) path = path[0 .. $-1];
+        auto parts = path.split("/");
+        if (parts.length <= 1) return "/";
+        return parts[0 .. $-1].join("/");
+    }
+
+    // Check if path is absolute
+    static bool isAbsolute(string path) {
+        return path.startsWith("/");
+    }
+
+    // Check if path exists
+    static bool exists(string path) {
+        return FileSystem.exists(path);
+    }
+
+    // Get file extension
+    static string extension(string path) {
+        auto base = basename(path);
+        auto idx = base.lastIndexOf(".");
+        return idx == -1 ? "" : base[idx + 1 .. $];
+    }
+
+    // Replace extension
+    static string replaceExtension(string path, string newExt) {
+        auto base = basename(path);
+        auto dir = dirname(path);
+        auto idx = base.lastIndexOf(".");
+        if (idx == -1)
+            return join([dir, base ~ "." ~ newExt]);
+        else
+            return join([dir, base[0 .. idx] ~ "." ~ newExt]);
+    }
+
+    // Make path absolute based on current working directory
+    static string absolute(string path) {
+        if (isAbsolute(path)) return normalize(path);
+        return normalize(FileSystem.cwd() ~ "/" ~ path);
+    }
+}
