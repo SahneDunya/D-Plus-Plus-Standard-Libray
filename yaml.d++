@@ -1,0 +1,50 @@
+// yaml.d++ - D++ Standard Library: YAML Parsing and Emitting
+
+namespace std::yaml {
+
+  // Represents a YAML value (could be scalar, sequence, or mapping)
+  variant YamlValue =
+    | Null
+    | Bool(value: bool)
+    | Number(value: float)
+    | String(value: string)
+    | Sequence(items: list<YamlValue>)
+    | Mapping(pairs: map<string, YamlValue>);
+
+  // Parses a YAML string into a YamlValue
+  func parse(yaml_text: string) -> YamlValue | error {
+    return platform::parse_yaml(yaml_text);
+  }
+
+  // Parses a YAML file and returns its contents as YamlValue
+  func load_file(path: string) -> YamlValue | error {
+    let content = std::fs::read_text(path)?;
+    return parse(content);
+  }
+
+  // Serializes a YamlValue into a YAML-formatted string
+  func stringify(value: YamlValue, indent: int = 2) -> string {
+    return platform::emit_yaml(value, indent);
+  }
+
+  // Writes a YamlValue to a file as YAML
+  func write_file(path: string, value: YamlValue, indent: int = 2) -> bool {
+    let yaml_text = stringify(value, indent);
+    return std::fs::write_text(path, yaml_text);
+  }
+
+  // Checks if a YAML string is valid
+  func is_valid(yaml_text: string) -> bool {
+    match parse(yaml_text) {
+      case error: return false;
+      else: return true;
+    }
+  }
+
+  // Platform-specific bindings
+  extern namespace platform {
+    func parse_yaml(yaml_text: string) -> YamlValue | error;
+    func emit_yaml(value: YamlValue, indent: int) -> string;
+  }
+
+} // namespace std::yaml
