@@ -1,0 +1,97 @@
+// error.d++ - D++ Standard Library: Standard Error Handling
+
+namespace std::error {
+
+  // Temel hata sınıfı
+  class Error {
+    message: string;
+    stacktrace: list<string>;
+
+    constructor(msg: string) {
+      this.message = msg;
+      this.stacktrace = platform::capture_stacktrace();
+    }
+
+    func what() -> string {
+      return message;
+    }
+
+    func trace() -> list<string> {
+      return stacktrace;
+    }
+
+    func to_string() -> string {
+      return "Error: " + message + "\nTrace:\n" + string::join(stacktrace, "\n");
+    }
+  }
+
+  // Özel hata türleri
+
+  class IOError : Error {
+    constructor(msg: string) {
+      super("IOError: " + msg);
+    }
+  }
+
+  class ValueError : Error {
+    constructor(msg: string) {
+      super("ValueError: " + msg);
+    }
+  }
+
+  class TypeError : Error {
+    constructor(msg: string) {
+      super("TypeError: " + msg);
+    }
+  }
+
+  class IndexError : Error {
+    constructor(msg: string) {
+      super("IndexError: " + msg);
+    }
+  }
+
+  class PermissionError : Error {
+    constructor(msg: string) {
+      super("PermissionError: " + msg);
+    }
+  }
+
+  class TimeoutError : Error {
+    constructor(msg: string) {
+      super("TimeoutError: " + msg);
+    }
+  }
+
+  class NotImplementedError : Error {
+    constructor() {
+      super("Feature not yet implemented.");
+    }
+  }
+
+  // Yardımcı fonksiyonlar
+
+  func raise(err: Error) -> never {
+    throw err;
+  }
+
+  func ensure(cond: bool, msg: string = "Condition failed") {
+    if (!cond) {
+      raise(Error(msg));
+    }
+  }
+
+  func try_catch<T>(operation: () -> T, handler: (Error) -> T) -> T {
+    try {
+      return operation();
+    } catch (e: Error) {
+      return handler(e);
+    }
+  }
+
+  // Platform bağımlı stacktrace mekanizması
+  extern namespace platform {
+    func capture_stacktrace() -> list<string>;
+  }
+
+}
