@@ -1,0 +1,80 @@
+// mod.d++ - D++ Standard Library: Module System
+
+namespace std::mod {
+
+  struct ModInfo {
+    name: string;
+    version: string;
+    author: string;
+    description: string;
+    loaded_at: time::Instant;
+    active: bool;
+  }
+
+  // Internal module registry
+  var registry: map<string, ModInfo> = {};
+
+  // Loads a module by name from a known path or compiled space
+  func load(name: string, path: string? = null) -> bool {
+    if (registry.contains(name)) return false;
+
+    // Try loading via platform (dynamic or static)
+    success := platform::load_module(name, path);
+
+    if (success) {
+      info := ModInfo {
+        name: name,
+        version: platform::module_version(name),
+        author: platform::module_author(name),
+        description: platform::module_description(name),
+        loaded_at: time::now(),
+        active: true,
+      };
+      registry[name] = info;
+    }
+
+    return success;
+  }
+
+  // Unloads a module if allowed
+  func unload(name: string) -> bool {
+    if (!registry.contains(name)) return false;
+
+    success := platform::unload_module(name);
+    if (success) {
+      registry.remove(name);
+    }
+
+    return success;
+  }
+
+  // Gets information about a loaded module
+  func info(name: string) -> ModInfo? {
+    return registry.get(name);
+  }
+
+  // Lists all currently loaded modules
+  func list() -> list<ModInfo> {
+    return registry.values();
+  }
+
+  // Checks if a module is loaded
+  func is_loaded(name: string) -> bool {
+    return registry.contains(name);
+  }
+
+  // Reloads a module by unloading and loading again
+  func reload(name: string, path: string? = null) -> bool {
+    return unload(name) && load(name, path);
+  }
+
+  // External interface to platform module loader
+  extern namespace platform {
+    func load_module(name: string, path: string?) -> bool;
+    func unload_module(name: string) -> bool;
+    func module_version(name: string) -> string;
+    func module_author(name: string) -> string;
+    func module_description(name: string) -> string;
+  }
+
+}
