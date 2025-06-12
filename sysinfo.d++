@@ -1,0 +1,68 @@
+// sysinfo.d++ - D++ Standard Library: System Information
+
+namespace std::sysinfo {
+
+  struct CPUInfo {
+    model: string;
+    cores: int;
+    threads: int;
+    frequency_ghz: float;
+  }
+
+  struct MemoryInfo {
+    total_mb: int;
+    available_mb: int;
+    used_mb: int;
+    usage_percent: float;
+  }
+
+  struct OSInfo {
+    name: string;
+    version: string;
+    architecture: string;
+  }
+
+  struct DiskInfo {
+    mount_point: string;
+    total_gb: int;
+    used_gb: int;
+    available_gb: int;
+    usage_percent: float;
+    filesystem_type: string;
+  }
+
+  struct UptimeInfo {
+    seconds: int;
+    human_readable: string;
+  }
+
+  func cpu() -> CPUInfo {
+    return platform::get_cpu_info();
+  }
+
+  func memory() -> MemoryInfo {
+    return platform::get_memory_info();
+  }
+
+  func os() -> OSInfo {
+    return platform::get_os_info();
+  }
+
+  func disks() -> list<DiskInfo> {
+    return platform::get_disks_info();
+  }
+
+  func uptime() -> UptimeInfo {
+    return platform::get_uptime_info();
+  }
+
+  // Platform-specific bindings
+  extern namespace platform {
+    func get_cpu_info() -> CPUInfo;
+    func get_memory_info() -> MemoryInfo;
+    func get_os_info() -> OSInfo;
+    func get_disks_info() -> list<DiskInfo>;
+    func get_uptime_info() -> UptimeInfo;
+  }
+
+} // namespace std::sysinfo
