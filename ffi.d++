@@ -1,0 +1,47 @@
+// ffi.d++ - D++ Standard Library: Foreign Function Interface
+
+namespace std::ffi {
+
+  // Represents a dynamically loaded library
+  struct Library {
+    handle: pointer;
+  }
+
+  // Represents a foreign function loaded from a dynamic library
+  struct ForeignFunction {
+    ptr: pointer;
+  }
+
+  // Loads a dynamic library
+  func load_library(path: string) -> Library | null {
+    return platform::load_library(path);
+  }
+
+  // Unloads a dynamic library
+  func unload_library(lib: Library) -> bool {
+    return platform::unload_library(lib.handle);
+  }
+
+  // Gets a function pointer from a dynamic library
+  func get_function(lib: Library, name: string) -> ForeignFunction | null {
+    let ptr = platform::get_function(lib.handle, name);
+    if ptr == null {
+      return null;
+    }
+    return ForeignFunction{ptr};
+  }
+
+  // Calls a foreign function with raw arguments (platform-dependent)
+  func call(func: ForeignFunction, args: list<pointer>) -> pointer {
+    return platform::call_function(func.ptr, args);
+  }
+
+  // Platform-specific bindings
+  extern namespace platform {
+    func load_library(path: string) -> Library | null;
+    func unload_library(handle: pointer) -> bool;
+    func get_function(handle: pointer, name: string) -> pointer;
+    func call_function(ptr: pointer, args: list<pointer>) -> pointer;
+  }
+
+} // namespace std::ffi
