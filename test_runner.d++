@@ -1,0 +1,83 @@
+// test_runner.d++ - D++ Standard Library: Unified Test Runner
+
+use std::memory_test;
+use std::string;
+use std::error;
+use std::time;
+
+namespace std::test_runner {
+
+  struct TestResult {
+    name: string;
+    passed: bool;
+    message: string;
+    duration_ms: int;
+  }
+
+  type TestFunction = func() -> void;
+
+  struct TestCase {
+    name: string;
+    function: TestFunction;
+  }
+
+  list<TestCase> registered_tests = [];
+
+  // Test kayıt fonksiyonu
+  func register_test(name: string, function: TestFunction) {
+    registered_tests.append(TestCase(name, function));
+  }
+
+  // Tek bir test çalıştır ve sonucu döndür
+  func run_test(tc: TestCase) -> TestResult {
+    start_time := time::now();
+    try {
+      tc.function();
+      end_time := time::now();
+      return TestResult(tc.name, true, "Success", time::elapsed_ms(start_time, end_time));
+    } catch (e: error::Error) {
+      end_time := time::now();
+      return TestResult(tc.name, false, e.message, time::elapsed_ms(start_time, end_time));
+    }
+  }
+
+  // Tüm kayıtlı testleri çalıştır
+  func run_all() {
+    print("Running " + string::to(registered_tests.size()) + " tests...\n");
+
+    passed := 0;
+    failed := 0;
+
+    for (tc in registered_tests) {
+      result := run_test(tc);
+      if (result.passed) {
+        print("[PASS] " + result.name + " (" + string::to(result.duration_ms) + "ms)");
+        passed += 1;
+      } else {
+        print("[FAIL] " + result.name + " - " + result.message + " (" + string::to(result.duration_ms) + "ms)");
+        failed += 1;
+      }
+    }
+
+    print("\nTest Summary:");
+    print("Passed: " + string::to(passed));
+    print("Failed: " + string::to(failed));
+  }
+
+  // Bellek testlerini kayıt et
+  func register_default_memory_tests() {
+    register_test("test_static_alloc", memory_test::test_static_alloc);
+    register_test("test_static_double_free", memory_test::test_static_double_free);
+    register_test("test_dynamic_alloc_resize", memory_test::test_dynamic_alloc_resize);
+    register_test("test_buffer_overflow", memory_test::test_buffer_overflow);
+    register_test("test_secure_zero", memory_test::test_secure_zero);
+    register_test("test_ownership_transfer", memory_test::test_ownership_transfer);
+  }
+
+  // Ana giriş fonksiyonu (isteğe bağlı)
+  func main() {
+    register_default_memory_tests();
+    run_all();
+  }
+
+}
