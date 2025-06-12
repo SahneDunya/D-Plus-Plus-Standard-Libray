@@ -1,0 +1,70 @@
+// os.d++ - D++ Standard Library: Operating System Utilities
+
+namespace std::os {
+
+  // Returns the name of the current operating system
+  func name() -> string {
+    return platform::os_name();
+  }
+
+  // Returns the current working directory
+  func cwd() -> string {
+    return platform::os_cwd();
+  }
+
+  // Changes the current working directory
+  func chdir(path: string) -> bool {
+    return platform::os_chdir(path);
+  }
+
+  // Returns the home directory of the current user
+  func home() -> string {
+    return platform::os_home();
+  }
+
+  // Returns the temporary directory path
+  func temp_dir() -> string {
+    return platform::os_temp_dir();
+  }
+
+  // Executes a shell command and returns output
+  func exec(cmd: string) -> (string, int) {
+    return platform::os_exec(cmd);
+  }
+
+  // Returns the process ID of the current process
+  func pid() -> int {
+    return platform::os_pid();
+  }
+
+  // Returns the parent process ID
+  func ppid() -> int {
+    return platform::os_ppid();
+  }
+
+  // Returns a list of environment variables in key=value format
+  func environ() -> list<string> {
+    return platform::os_environ();
+  }
+
+  // Exits the process with the given status code
+  func exit(code: int = 0) -> never {
+    platform::os_exit(code);
+    unreachable;
+  }
+
+  // Platform bindings (to be implemented per OS)
+  extern namespace platform {
+    func os_name() -> string;
+    func os_cwd() -> string;
+    func os_chdir(path: string) -> bool;
+    func os_home() -> string;
+    func os_temp_dir() -> string;
+    func os_exec(cmd: string) -> (string, int);
+    func os_pid() -> int;
+    func os_ppid() -> int;
+    func os_environ() -> list<string>;
+    func os_exit(code: int);
+  }
+
+} // namespace std::os
